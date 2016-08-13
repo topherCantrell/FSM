@@ -1,15 +1,3 @@
-var SWITCH_PIN = 7;
-var GREEN_PIN = 11;
-var RED_PIN = 13;
-
-var gpio = require('rpi-gpio');
-
-var i2c = require('i2c-bus'),
-  i2c1=i2c.openSync(1);
-
-i2c1.writeByteSync(0x72,0x21,0);
-i2c1.writeByteSync(0x72,0xEF,0);
-i2c1.writeByteSync(0x72,0x81,0);
 
 var BLANK = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 var BOARD = [0x24,0x24,0x24,0x24,0xFF,0xFF,0x24,0x24,0x24,0x24,0xFF,0xFF,0x24,0x24,0x24,0x24];
@@ -98,38 +86,46 @@ var GAME_CELLS = [
 	[0xC0,0xC0,0xC0,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
 ];
 
-gpio.setup(GREEN_PIN, gpio.DIR_OUT, function(err) {
-	gpio.setup(RED_PIN, gpio.DIR_OUT, function(err) {
-		setButtonColor(0);
-	});	
-});
+var IM_RED = [0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF];
+var IM_GREEN = [0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00,0xFF,0x00]; 
 
-gpio.setup(SWITCH_PIN, gpio.DIR_IN, gpio.EDGE_BOTH);
-gpio.on('change', function(channel,value) {
-	if (value) {
-		drawImage(BOARD);
-	} else {
-		drawImage(BLANK);
-	}	
-});
-
-function drawImage(image) {
-	for (var x=0;x<16;++x) {
-		i2c1.writeByteSync(0x72,x,image[x]);
-	}
+var MACHINE = {		
+	START : {
+		enter : ['setButtonColor', 1],		
+		timeout : [2000, 'other'],
+        down : 'solidGreen',            
+	},
+	other : {
+		enter : ['setButtonColor', 2],
+		timeout : [2000, 'START'],
+        down : 'solidRed',            
+	},		
+	solidRed : {
+		enter : ['drawImage',IM_RED],
+		up : 'START'
+	},		
+	solidGreen : {
+		enter : ['drawImage',IM_GREEN],
+		up : 'other'
+	}		 
 }
 
-function setButtonColor(color) {
-	color = color & 3;
-	if(color==1 || color==3) {
-		gpio.write(GREEN_PIN, false);
-	} else {
-		gpio.write(GREEN_PIN, true);
-	}
-	if(color==2 || color==3) {
-		gpio.write(RED_PIN, false);
-	} else {
-		gpio.write(RED_PIN, true);
-	}
+MACHINE.setButtonColor = function(value) {
+	hardware.setButtonColor(value);
 }
 
+MACHINE.drawImage = function(value) {
+	hardware.drawImage(value);
+}
+
+function buttonEventListener(event) {
+	runner.handleEvent(event);
+}
+
+var runner = require('./FSMRunner.js');
+
+var hardware = require('./Hardware.js');
+
+hardware.init(buttonEventListener, function() {
+	runner.init(MACHINE);
+});
