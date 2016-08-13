@@ -19,12 +19,12 @@ function gotoState(stateName) {
 		timeoutID = null;
 	}
 	currentState = machine[stateName];
-	var ef = currentState["enter"];
+	var ef = currentState['ENTER'];
 	if(ef) {
 		var fn = machine[ef[0]];
 		fn.apply(machine,ef.slice(1,ef.length));
 	}	
-	timeoutEvent = currentState["timeout"];
+	timeoutEvent = currentState['TIMEOUT'];
 	if(timeoutEvent) {
 		timeoutID = setTimeout(function() {
 			timeoutID = null;
