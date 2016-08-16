@@ -5,15 +5,15 @@ var timeoutID = null;
 var timeoutEvent = null;
 
 exports.init = init;
-exports.gotoState = gotoState;
 exports.handleEvent = handleEvent;
 
-function init(m) {
+function init(m, start) {
 	machine = m;
-	gotoState('START');
+	gotoState(start);
 }
 
 function gotoState(stateName) {
+	//console.log('Changing to state :'+stateName+':');
 	if(timeoutID) {		
 		clearTimeout(timeoutID);
 		timeoutID = null;
@@ -21,22 +21,39 @@ function gotoState(stateName) {
 	currentState = machine[stateName];
 	var ef = currentState['ENTER'];
 	if(ef) {
-		var fn = machine[ef[0]];
-		fn.apply(machine,ef.slice(1,ef.length));
+		runFunctions(ef,0);
 	}	
 	timeoutEvent = currentState['TIMEOUT'];
 	if(timeoutEvent) {
 		timeoutID = setTimeout(function() {
 			timeoutID = null;
+			runFunctions(timeoutEvent,2);
 			gotoState(timeoutEvent[1]);
 		},timeoutEvent[0]);
 	}	
 }
 
+function runFunctions(list,index) {
+	while(index<list.length) {
+		var end = list.indexOf('and',index);
+		if(end<0) end=list.length;
+		var fn = machine[list[index]];
+		fn.apply(machine,list.slice(index+1,end));
+		index = end;
+		if(index<list.length) {
+			++index;
+		}
+	}
+}
+
 function handleEvent(eventName) {
 	var ef = currentState[eventName];
 	if(ef) {
-		gotoState(ef);		
+		if(! Array.isArray(ef)) {
+			ef = [ef];
+		}
+		runFunctions(ef,1);
+		gotoState(ef[0]);		
 	}	
 }
 

@@ -38,12 +38,12 @@ function init(buttonListener, cb) {
 
 function setButtonColor(color) {
 	color = color & 3;
-	if(color==1 || color==3) {
+	if(color==2 || color==3) {
 		gpio.write(GREEN_PIN, false);
 	} else {
 		gpio.write(GREEN_PIN, true);
 	}
-	if(color==2 || color==3) {
+	if(color==1 || color==3) {
 		gpio.write(RED_PIN, false);
 	} else {
 		gpio.write(RED_PIN, true);
