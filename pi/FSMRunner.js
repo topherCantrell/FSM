@@ -13,7 +13,7 @@ function init(m, start) {
 }
 
 function gotoState(stateName) {
-	//console.log('Changing to state :'+stateName+':');
+	console.log('Changing to state :'+stateName+':');
 	if(timeoutID) {		
 		clearTimeout(timeoutID);
 		timeoutID = null;
@@ -21,6 +21,9 @@ function gotoState(stateName) {
 	currentState = machine[stateName];
 	var ef = currentState['ENTER'];
 	if(ef) {
+		if(! Array.isArray(ef)) {
+			ef = [ef];
+		}
 		runFunctions(ef,0);
 	}	
 	timeoutEvent = currentState['TIMEOUT'];
@@ -46,15 +49,19 @@ function runFunctions(list,index) {
 	}
 }
 
-function handleEvent(eventName) {
-	var ef = currentState[eventName];
-	if(ef) {
-		if(! Array.isArray(ef)) {
-			ef = [ef];
-		}
-		runFunctions(ef,1);
-		gotoState(ef[0]);		
-	}	
+function handleEvent(eventName) {	
+	setImmediate( function() {
+		var ef = currentState[eventName];
+		if(ef) {
+			if(! Array.isArray(ef)) {
+				ef = [ef];
+			}
+			runFunctions(ef,1); // These may call handleEvent()
+			gotoState(ef[0]);		
+		} else {
+			console.log("Ignoring '"+eventName+"'");
+		}	
+	});
 }
 
 

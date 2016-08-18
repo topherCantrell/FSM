@@ -7,7 +7,7 @@ var IM_WIPERS = {
 	[0x42,0x42,0xFF,0xFF,0x42,0x42,0x42,0x42,0x42,0x42,0x42,0x42,0xFF,0xFF,0x42,0x42],
 	[0x18,0x18,0x18,0x18,0x18,0x18,0xFF,0xFF,0xFF,0xFF,0x18,0x18,0x18,0x18,0x18,0x18]],
 	
-	vertical : [
+	vert : [
 	[0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01,0x01],
 	[0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02],
 	[0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04],
@@ -17,7 +17,7 @@ var IM_WIPERS = {
 	[0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40],
 	[0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80,0x80]],
 	
-	horizontal : [
+	horiz : [
 	[0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xFF,0xFF],
 	[0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xFF,0xFF,0x00,0x00],
 	[0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xFF,0xFF,0x00,0x00,0x00,0x00],
@@ -27,7 +27,7 @@ var IM_WIPERS = {
 	[0x00,0x00,0xFF,0xFF,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00],
 	[0xFF,0xFF,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]],
 	
-	diagonal : [
+	diag : [
 	[0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x01],
 	[0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x01,0x02,0x02],
 	[0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x01,0x02,0x02,0x04,0x04],
@@ -86,49 +86,419 @@ var IM_SOLID_COLORS = [
 
 var TIMING = {
 		splashLetters : 250,
-		splashWord : 2000
+		splashWord : 1000,
+		wipe : 75,
+		wipeHold : 250,
+		winOn: 1000,
+		winOff: 1000,
+		pickCPUOn: 1000,
+		pickCPUOff: 1000,
+		pickCPUHold: 2000,
+		winOn:500,
+		winOff:500
 }
 
 var MACHINE = {	
 		
-	tic_T   : {
+	// ------------------------------------------------
+		
+	SPLASH   : {
 		ENTER : ['setButtonColor',2, 'and', 'drawImage', IM_SPLASH_SCREENS.tic[0]],
-		TIMEOUT : [TIMING.splashLetters, 'tic_TI']
+		TIMEOUT : [TIMING.splashLetters, 'Tic_TI'],
+        down : 'PICKS'
 	},
-	tic_TI  : {
+	Tic_TI  : {
 		ENTER : ['drawImage', IM_SPLASH_SCREENS.tic[1]],
-		TIMEOUT : [TIMING.splashLetters, 'tic_TIC']
+		TIMEOUT : [TIMING.splashLetters, 'Tic_TIC'],
+        down : 'PICKS'
 	},
-	tic_TIC : {
+	Tic_TIC : {
 		ENTER : ['drawImage', IM_SPLASH_SCREENS.tic[2]],
-		TIMEOUT : [TIMING.splashWord, 'tac_T']
+		TIMEOUT : [TIMING.splashWord, 'WipeH_1'],
+        down : 'PICKS'
+	},	
+	
+	WipeH_1 : {
+		ENTER : ['orImageBuffer', IM_WIPERS.horiz[0],3],
+		TIMEOUT : [TIMING.wipe, 'WipeH_2'],
+        down : 'PICKS'
+	},
+	WipeH_2 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.horiz[0], 'and', 'orImageBuffer', IM_WIPERS.horiz[1],3],
+		TIMEOUT : [TIMING.wipe, 'WipeH_3'],
+        down : 'PICKS'
+	},
+	WipeH_3 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.horiz[1], 'and', 'orImageBuffer', IM_WIPERS.horiz[2],3],
+		TIMEOUT : [TIMING.wipe, 'WipeH_4'],
+        down : 'PICKS'
+	},
+	WipeH_4 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.horiz[2], 'and', 'orImageBuffer', IM_WIPERS.horiz[3],3],
+		TIMEOUT : [TIMING.wipe, 'WipeH_5'],
+        down : 'PICKS'
+	},
+	WipeH_5 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.horiz[3], 'and', 'orImageBuffer', IM_WIPERS.horiz[4],3],
+		TIMEOUT : [TIMING.wipe, 'WipeH_6'],
+        down : 'PICKS'
+	},
+	WipeH_6 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.horiz[4], 'and', 'orImageBuffer', IM_WIPERS.horiz[5],3],
+		TIMEOUT : [TIMING.wipe, 'WipeH_7'],
+        down : 'PICKS'
+	},
+	WipeH_7 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.horiz[5], 'and', 'orImageBuffer', IM_WIPERS.horiz[6],3],
+		TIMEOUT : [TIMING.wipe, 'WipeH_8'],
+        down : 'PICKS'
+	},
+	WipeH_8 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.horiz[6], 'and', 'orImageBuffer', IM_WIPERS.horiz[7],3],
+		TIMEOUT : [TIMING.wipe, 'WipeH_HOLD'],
+        down : 'PICKS'
+	},
+	WipeH_HOLD : {
+		ENTER : ['drawImage',IM_SOLID_COLORS[0]],
+		TIMEOUT : [TIMING.wipeHold, 'Tac_T'],
+        down : 'PICKS'
 	},
 	
-	tac_T   : {
+	Tac_T   : {
 		ENTER : ['drawImage', IM_SPLASH_SCREENS.tac[0]],
-		TIMEOUT : [TIMING.splashLetters, 'tac_TA']
+		TIMEOUT : [TIMING.splashLetters, 'Tac_TA'],
+        down : 'PICKS'
 	},
-	tac_TA  : {
+	Tac_TA  : {
 		ENTER : ['drawImage', IM_SPLASH_SCREENS.tac[1]],
-		TIMEOUT : [TIMING.splashLetters, 'tac_TAC']
+		TIMEOUT : [TIMING.splashLetters, 'Tac_TAC'],
+        down : 'PICKS'
 	},
-	tac_TAC : {
+	Tac_TAC : {
 		ENTER : ['drawImage', IM_SPLASH_SCREENS.tac[2]],
-		TIMEOUT : [TIMING.splashWord, 'toe_T']
+		TIMEOUT : [TIMING.splashWord, 'WipeV_1'],
+        down : 'PICKS'
 	},
 	
-	toe_T   : {
+	WipeV_1 : {
+		ENTER : ['orImageBuffer', IM_WIPERS.vert[0],3],
+		TIMEOUT : [TIMING.wipe, 'WipeV_2'],
+        down : 'PICKS'
+	},
+	WipeV_2 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.vert[0], 'and', 'orImageBuffer', IM_WIPERS.vert[1],3],
+		TIMEOUT : [TIMING.wipe, 'WipeV_3'],
+        down : 'PICKS'
+	},
+	WipeV_3 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.vert[1], 'and', 'orImageBuffer', IM_WIPERS.vert[2],3],
+		TIMEOUT : [TIMING.wipe, 'WipeV_4'],
+        down : 'PICKS'
+	},
+	WipeV_4 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.vert[2], 'and', 'orImageBuffer', IM_WIPERS.vert[3],3],
+		TIMEOUT : [TIMING.wipe, 'WipeV_5'],
+        down : 'PICKS'
+	},
+	WipeV_5 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.vert[3], 'and', 'orImageBuffer', IM_WIPERS.vert[4],3],
+		TIMEOUT : [TIMING.wipe, 'WipeV_6'],
+        down : 'PICKS'
+	},
+	WipeV_6 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.vert[4], 'and', 'orImageBuffer', IM_WIPERS.vert[5],3],
+		TIMEOUT : [TIMING.wipe, 'WipeV_7'],
+        down : 'PICKS'
+	},
+	WipeV_7 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.vert[5], 'and', 'orImageBuffer', IM_WIPERS.vert[6],3],
+		TIMEOUT : [TIMING.wipe, 'WipeV_8'],
+        down : 'PICKS'
+	},
+	WipeV_8 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.vert[6], 'and', 'orImageBuffer', IM_WIPERS.vert[7],3],
+		TIMEOUT : [TIMING.wipe, 'WipeV_HOLD'],
+        down : 'PICKS'
+	},
+	WipeV_HOLD : {
+		ENTER : ['drawImage',IM_SOLID_COLORS[0]],
+		TIMEOUT : [TIMING.wipeHold, 'Toe_T'],
+        down : 'PICKS'
+	},
+	
+	Toe_T   : {
 		ENTER : ['drawImage', IM_SPLASH_SCREENS.toe[0]],
-		TIMEOUT : [TIMING.splashLetters, 'toe_TO']
+		TIMEOUT : [TIMING.splashLetters, 'Toe_TO'],
+        down : 'PICKS'
 	},
-	toe_TO  : {
+	Toe_TO  : {
 		ENTER : ['drawImage', IM_SPLASH_SCREENS.toe[1]],
-		TIMEOUT : [TIMING.splashLetters, 'toe_TOE']
+		TIMEOUT : [TIMING.splashLetters, 'Toe_TOE'],
+        down : 'PICKS'
 	},
-	toe_TOE : {
+	Toe_TOE : {
 		ENTER : ['drawImage', IM_SPLASH_SCREENS.toe[2]],
-		TIMEOUT : [TIMING.splashWord, 'tic_T']
-	}	
+		TIMEOUT : [TIMING.splashWord, 'WipeB_1'],
+        down : 'PICKS'
+	},
+	
+	WipeB_1 : {
+		ENTER : ['orImageBuffer', IM_WIPERS.board[0],3],
+		TIMEOUT : [TIMING.wipe, 'WipeB_2'],
+        down : 'PICKS'
+	},
+	WipeB_2 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.board[0], 'and', 'orImageBuffer', IM_WIPERS.board[1],3],
+		TIMEOUT : [TIMING.wipe, 'WipeB_3'],
+        down : 'PICKS'
+	},
+	WipeB_3 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.board[1], 'and', 'orImageBuffer', IM_BOARD,3],
+		TIMEOUT : [TIMING.wipe, 'WipeB_4'],
+        down : 'PICKS'
+	},
+	WipeB_4 : {
+		ENTER : ['andNotImageBuffer',IM_BOARD, 'and', 'orImageBuffer', IM_WIPERS.board[2],3],
+		TIMEOUT : [TIMING.wipe, 'WipeB_5'],
+        down : 'PICKS'
+	},
+	WipeB_5 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.board[2], 'and', 'orImageBuffer', IM_BOARD,3],
+		TIMEOUT : [TIMING.wipe, 'WipeB_6'],
+        down : 'PICKS'
+	},
+	WipeB_6 : {
+		ENTER : ['andNotImageBuffer',IM_BOARD, 'and', 'orImageBuffer', IM_WIPERS.board[1],3],
+		TIMEOUT : [TIMING.wipe, 'WipeB_7'],
+        down : 'PICKS'
+	},
+	WipeB_7 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.board[1], 'and', 'orImageBuffer', IM_WIPERS.board[0],3],
+		TIMEOUT : [TIMING.wipe, 'WipeB_HOLD'],
+        down : 'PICKS'
+	},	
+	WipeB_HOLD : {
+		ENTER : ['drawImage',IM_SOLID_COLORS[0]],
+		TIMEOUT : [TIMING.wipeHold, 'SPLASH'],
+        down : 'PICKS'
+	},
+	
+	// ------------------------------------------------
+	
+	WIN_cpu : {
+		ENTER : ['drawBoard', 'and', 'setButtonColor', 1],
+		TIMEOUT : [TIMING.winOn, 'WIN_cpu2']		
+	},
+	WIN_cpu2 : {
+		ENTER : ['drawImage', IM_BOARD, 'and', 'setButtonColor',0],
+		TIMEOUT : [TIMING.winOff, 'WIN_cpu']
+	},	
+	
+	WIN_human : {
+		ENTER : ['drawBoard', 'and', 'setButtonColor', 2],
+		TIMEOUT : [TIMING.winOn, 'WIN_human2']		
+	},
+	WIN_human2 : {
+		ENTER : ['drawImage', IM_BOARD, 'and', 'setButtonColor',0],
+		TIMEOUT : [TIMING.winOff, 'WIN_human']
+	},	
+	
+	WIN_tie : {
+		ENTER : ['drawBoard', 'and', 'setButtonColor', 3],
+		TIMEOUT : [TIMING.winOn, 'WIN_tie2']		
+	},
+	WIN_tie2 : {
+		ENTER : ['drawImage', IM_BOARD, 'and', 'setButtonColor',0],
+		TIMEOUT : [TIMING.winOff, 'WIN_tie']
+	},	
+	
+	// ------------------------------------------------
+	
+	PICKS : {
+		ENTER :  ['setButtonColor',0,'and','newGame', 'and', 'pickCPU'],
+		RANDOM : 'Opp_RANDOM',
+		ONEDER : 'Opp_ONEDER',
+		CAT :    'Opp_CAT'
+	},
+	
+	Opp_RANDOM : {
+		ENTER : ['drawImage', IM_COMPUTER_PLAYERS.mrRandom],
+		TIMEOUT : [TIMING.pickCPUOn, 'Opp_RANDOM2']
+	},
+	Opp_RANDOM2 : {
+		ENTER : ['drawImage', IM_SOLID_COLORS[0]],
+		TIMEOUT : [TIMING.pickCPUOff, 'Opp_RANDOM3']	
+	},
+	Opp_RANDOM3 : {
+		ENTER : ['drawImage', IM_COMPUTER_PLAYERS.mrRandom],
+		TIMEOUT : [TIMING.pickCPUHold, 'PickWipe_1']
+	},	
+	
+	Opp_ONEDER : {
+		ENTER : ['drawImage', IM_COMPUTER_PLAYERS.oneder],
+		TIMEOUT : [TIMING.pickCPUOn, 'Opp_ONEDER2']
+	},
+	Opp_ONEDER2 : {
+		ENTER : ['drawImage', IM_SOLID_COLORS[0]],
+		TIMEOUT : [TIMING.pickCPUOff, 'Opp_ONEDER3']	
+	},
+	Opp_ONEDER3 : {
+		ENTER : ['drawImage', IM_COMPUTER_PLAYERS.oneder],
+		TIMEOUT : [TIMING.pickCPUHold, 'PickWipe_1']
+	},
+	
+	Opp_CAT : {
+		ENTER : ['drawImage', IM_COMPUTER_PLAYERS.catWoman],
+		TIMEOUT : [TIMING.pickCPUOn, 'Opp_CAT2']
+	},
+	Opp_CAT2 : {
+		ENTER : ['drawImage', IM_SOLID_COLORS[0]],
+		TIMEOUT : [TIMING.pickCPUOff, 'Opp_CAT3']	
+	},
+	Opp_CAT3 : {
+		ENTER : ['drawImage', IM_COMPUTER_PLAYERS.catWoman],
+		TIMEOUT : [TIMING.pickCPUHold, 'PickWipe_1']
+	},	
+	
+	PickWipe_1 : {
+		ENTER : ['orImageBuffer', IM_WIPERS.board[0],3],
+		TIMEOUT : [TIMING.wipe, 'PickWipe_2']
+	},
+	PickWipe_2 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.board[0], 'and', 'orImageBuffer', IM_WIPERS.board[1],3],
+		TIMEOUT : [TIMING.wipe, 'PickWipe_3']
+	},
+	PickWipe_3 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.board[1], 'and', 'orImageBuffer', IM_BOARD,3],
+		TIMEOUT : [TIMING.wipe, 'PickWipe_4']
+	},
+	PickWipe_4 : {
+		ENTER : ['andNotImageBuffer',IM_BOARD, 'and', 'orImageBuffer', IM_WIPERS.board[2],3],
+		TIMEOUT : [TIMING.wipe, 'PickWipe_5']
+	},
+	PickWipe_5 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.board[2], 'and', 'orImageBuffer', IM_BOARD,3],
+		TIMEOUT : [TIMING.wipeHold, 'Pick2']
+	},	
+	
+	Pick2 : {
+		ENTER : ['pickFirstPlayer'],
+		HUMAN : 'PLAY_HUMAN',
+		CPU :   'PLAY_CPU'	
+	},
+	
+	// ------------------------------------------------
+	
+	OVER_HUMAN : {
+		ENTER : ['setButtonColor',2, 'and', 'drawBoard'],
+		TIMEOUT : [TIMING.winOn, 'OVER_HUMAN2'],
+		down : 'OverWipe_1'
+	},
+	OVER_HUMAN2 : {
+		ENTER : ['setButtonColor',0, 'and', 'drawImage', IM_SOLID_COLORS[0]],
+		TIMEOUT : [TIMING.winOff, 'OVER_HUMAN'],
+		down : 'OverWipe_1'
+	},
+	
+	OVER_CPU : {
+		ENTER : ['setButtonColor',1, 'and', 'drawBoard'],
+		TIMEOUT : [TIMING.winOn, 'OVER_CPU2'],
+		down : 'OverWipe_1'
+	},
+	OVER_CPU2 : {
+		ENTER : ['setButtonColor',0, 'and', 'drawImage', IM_SOLID_COLORS[0]],
+		TIMEOUT : [TIMING.winOff, 'OVER_CPU'],
+		down : 'OverWipe_1'
+	},
+	
+	OVER_TIE : {
+		ENTER : ['setButtonColor',3, 'and', 'drawBoard'],
+		TIMEOUT : [TIMING.winOn, 'OVER_TIE2'],
+		down : 'OverWipe_1'
+	},
+	OVER_TIE2 : {
+		ENTER : ['setButtonColor',0, 'and', 'drawImage', IM_SOLID_COLORS[0]],
+		TIMEOUT : [TIMING.winOff, 'OVER_TIE'],
+		down : 'OverWipe_1'
+	},
+	
+	OverWipe_1 : {
+		ENTER : ['setButtonColor','0','and','orImageBuffer', IM_WIPERS.diag[0],3],
+		TIMEOUT : [TIMING.wipe, 'OverWipe_2']
+	},
+	OverWipe_2 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.diag[0], 'and', 'orImageBuffer', IM_WIPERS.diag[1],3],
+		TIMEOUT : [TIMING.wipe, 'OverWipe_3']
+	},
+	OverWipe_3 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.diag[1], 'and', 'orImageBuffer', IM_WIPERS.diag[2],3],
+		TIMEOUT : [TIMING.wipe, 'OverWipe_4']
+	},
+	OverWipe_4 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.diag[2], 'and', 'orImageBuffer', IM_WIPERS.diag[3],3],
+		TIMEOUT : [TIMING.wipe, 'OverWipe_5']
+	},
+	OverWipe_5 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.diag[3], 'and', 'orImageBuffer', IM_WIPERS.diag[4],3],
+		TIMEOUT : [TIMING.wipe, 'OverWipe_6']
+	},
+	OverWipe_6 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.diag[4], 'and', 'orImageBuffer', IM_WIPERS.diag[5],3],
+		TIMEOUT : [TIMING.wipe, 'OverWipe_7']
+	},
+	OverWipe_7 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.diag[5], 'and', 'orImageBuffer', IM_WIPERS.diag[6],3],
+		TIMEOUT : [TIMING.wipe, 'OverWipe_8']
+	},
+	OverWipe_8 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.diag[6], 'and', 'orImageBuffer', IM_WIPERS.diag[7],3],
+		TIMEOUT : [TIMING.wipe, 'OverWipe_9']
+	},
+	OverWipe_9 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.diag[7], 'and', 'orImageBuffer', IM_WIPERS.diag[8],3],
+		TIMEOUT : [TIMING.wipe, 'OverWipe_10']
+	},
+	OverWipe_10 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.diag[8], 'and', 'orImageBuffer', IM_WIPERS.diag[9],3],
+		TIMEOUT : [TIMING.wipe, 'OverWipe_11']
+	},
+	OverWipe_11 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.diag[9], 'and', 'orImageBuffer', IM_WIPERS.diag[10],3],
+		TIMEOUT : [TIMING.wipe, 'OverWipe_12']
+	},
+	OverWipe_12 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.diag[10], 'and', 'orImageBuffer', IM_WIPERS.diag[11],3],
+		TIMEOUT : [TIMING.wipe, 'OverWipe_13']
+	},
+	OverWipe_13 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.diag[11], 'and', 'orImageBuffer', IM_WIPERS.diag[12],3],
+		TIMEOUT : [TIMING.wipe, 'OverWipe_14']
+	},
+	OverWipe_14 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.diag[12], 'and', 'orImageBuffer', IM_WIPERS.diag[13],3],
+		TIMEOUT : [TIMING.wipe, 'OverWipe_15']
+	},
+	OverWipe_15 : {
+		ENTER : ['andNotImageBuffer',IM_WIPERS.diag[13], 'and', 'orImageBuffer', IM_WIPERS.diag[14],3],
+		TIMEOUT : [TIMING.wipe, 'OverWipe_HOLD']
+	},	
+	OverWipe_HOLD : {
+		ENTER : ['drawImage',IM_SOLID_COLORS[0]],
+		TIMEOUT : [TIMING.wipeHold, 'SPLASH']        
+	},
+	
+	
+	// ------------------------------------------------
+	
+	PLAY_HUMAN : {
+		ENTER : ['log', 'READY HUMAN'],
+		down : 'OVER_HUMAN'
+	},
+	
+	PLAY_CPU : {
+		ENTER : ['log', 'READY CPU'],
+	    down : 'OVER_CPU'
+	},
 	
 	
 }
@@ -163,9 +533,27 @@ MACHINE.drawBoard = function() {
 }
 
 MACHINE.newGame = function() {
-	board = [0,0,0,  0,0,0,  0,0,0];
-	cursor = 8; // First advance ... back to 0
+	board = [0,0,0,  0,0,0,  0,0,0];	
+	cursor = 8; // First advance ... back to 0	
+}
+
+MACHINE.pickCPU = function() {
 	cpu = randomInt(3);
+	if(cpu==0) {
+		runner.handleEvent('RANDOM');
+	} else if(cpu==1) {
+		runner.handleEvent('ONEDER');
+	} else {
+		runner.handleEvent('CAT');
+	}
+}
+
+MACHINE.pickFirstPlayer = function() {
+	if(randomInt(2)==0) {
+		runner.handleEvent('HUMAN');
+	} else {
+		runner.handleEvent('CPU');
+	}
 }
 
 MACHINE.setCellAtCursor = function(color) {
@@ -255,7 +643,8 @@ function buttonEventListener(event) {
 hardware.init(buttonEventListener, function() {
 	
 	//hardware.drawImage(IM_SOLID_COLORS[0]);
-	runner.init(MACHINE,'tic_T');	
+	MACHINE.newGame();
+	runner.init(MACHINE,'OVER_TIE');	
 });
 
 
