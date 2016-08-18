@@ -1,5 +1,9 @@
 # Journal
 
+## 8/17/2016
+
+Lots of work on the pi tic-tac-toe state machine. Only thing left is the game loop.
+
 ## 8/16/2016
 
 FSM in nodejs turns out to be easy. Good! The JSON notation makes for easy declarative
