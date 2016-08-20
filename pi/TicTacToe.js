@@ -85,17 +85,21 @@ var IM_SOLID_COLORS = [
 ];
 
 var TIMING = {
-		splashLetters : 250,
-		splashWord : 1000,
-		wipe : 75,
-		wipeHold : 250,
-		winOn: 1000,
-		winOff: 1000,
-		pickCPUOn: 1000,
-		pickCPUOff: 1000,
-		pickCPUHold: 2000,
-		winOn:500,
-		winOff:500
+		splashLetters :  250,
+		splashWord    : 1000,
+		wipe          :   75,
+		wipeHold      :  250,
+		winOn         : 1000,
+		winOff        : 1000,
+		pickCPUOn     : 1000,
+		pickCPUOff    : 1000,
+		pickCPUHold   : 2000,
+		winOn         :  500,
+		winOff        :  500,
+		inputDown     :  500,
+		inputHeld     : 1000,
+		cpuOn         :  500,
+		cpuOff        :  500
 }
 
 var MACHINE = {	
@@ -316,9 +320,9 @@ var MACHINE = {
 	
 	PICKS : {
 		ENTER :  ['setButtonColor',0,'and','newGame', 'and', 'pickCPU'],
-		RANDOM : 'Opp_RANDOM',
-		ONEDER : 'Opp_ONEDER',
-		CAT :    'Opp_CAT'
+		random : 'Opp_RANDOM',
+		oneder : 'Opp_ONEDER',
+		cat :    'Opp_CAT'
 	},
 	
 	Opp_RANDOM : {
@@ -383,8 +387,8 @@ var MACHINE = {
 	
 	Pick2 : {
 		ENTER : ['pickFirstPlayer'],
-		HUMAN : 'PLAY_HUMAN',
-		CPU :   'PLAY_CPU'	
+		human : 'PLAY_HUMAN',
+		cpu :   'PLAY_CPU'	
 	},
 	
 	// ------------------------------------------------
@@ -486,20 +490,69 @@ var MACHINE = {
 		ENTER : ['drawImage',IM_SOLID_COLORS[0]],
 		TIMEOUT : [TIMING.wipeHold, 'SPLASH']        
 	},
-	
-	
+		
 	// ------------------------------------------------
 	
 	PLAY_HUMAN : {
-		ENTER : ['log', 'READY HUMAN'],
-		down : 'OVER_HUMAN'
+		ENTER :   ['setButtonColor', 2, 'and', 'advanceCursor'],
+	    TIMEOUT : [0, 'InputA']
 	},
 	
+	InputA : {
+		ENTER : ['setCellAtCursor', 3, 'and', 'drawBoard'],
+	    TIMEOUT : [TIMING.inputDown, 'InputB'],
+	    down : 'InputC'
+	},
+	
+	InputB : {
+		ENTER : ['setCellAtCursor', 0, 'and', 'drawBoard'],
+		TIMEOUT : [TIMING.inputDown, 'InputA'],
+	    down : 'InputC'
+	},
+	
+	InputC : {
+		ENTER : ['setCellAtCursor', 3, 'and', 'drawBoard'],
+		TIMEOUT : [TIMING.inputHeld, 'HMove'],
+	    up : ['PLAY_HUMAN', 'setCellAtCursor', 0]
+	},
+			
+	HMove : {
+		ENTER : ['setCellAtCursor', 2, 'and',  'drawBoard', 'and', 'getGameState'],
+		cpu :   'OVER_CPU',
+		human : 'OVER_HUMAN',
+		play :  'PLAY_CPU',
+		tie :   'OVER_TIE'
+	},
+	
+	
+		
 	PLAY_CPU : {
-		ENTER : ['log', 'READY CPU'],
-	    down : 'OVER_CPU'
+		ENTER : ['setButtonColor',1, 'and', 'getCPUMove', 'and', 'setCellAtCursor',1,'and','drawBoard'],
+	    TIMEOUT : [TIMING.cpuOn, 'OppC1']
 	},
 	
+	OppC1 : {
+		ENTER : ['setCellAtCursor',0, 'and', 'drawBoard'],
+	    TIMEOUT : [TIMING.cpuOff, 'OppC2']
+	},
+	
+    OppC2 : {
+    	ENTER : ['setCellAtCursor',1, 'and', 'drawBoard'],
+	    TIMEOUT : [TIMING.cpuOn, 'OppC3']
+	},
+	
+	OppC3 : {
+		ENTER : ['setCellAtCursor',0, 'and', 'drawBoard'],
+	    TIMEOUT : [TIMING.cpuOff, 'MoveCPU']
+	},
+	
+    MoveCPU : {
+    	ENTER : ['setCellAtCursor',1, 'and', 'drawBoard', 'and', 'getGameState'],
+    	cpu :   'OVER_CPU',
+		human : 'OVER_HUMAN',
+		play :  'PLAY_HUMAN',
+		tie :   'OVER_TIE'
+	},	
 	
 }
 
@@ -538,27 +591,30 @@ MACHINE.newGame = function() {
 }
 
 MACHINE.pickCPU = function() {
+	cpu = 2;
+	runner.handleEvent('cat');
+	/*
 	cpu = randomInt(3);
 	if(cpu==0) {
-		runner.handleEvent('RANDOM');
+		runner.handleEvent('random');
 	} else if(cpu==1) {
-		runner.handleEvent('ONEDER');
+		runner.handleEvent('oneder');
 	} else {
-		runner.handleEvent('CAT');
+		runner.handleEvent('cat');
 	}
+	*/
 }
 
 MACHINE.pickFirstPlayer = function() {
 	if(randomInt(2)==0) {
-		runner.handleEvent('HUMAN');
+		runner.handleEvent('human');
 	} else {
-		runner.handleEvent('CPU');
+		runner.handleEvent('cpu');
 	}
 }
 
 MACHINE.setCellAtCursor = function(color) {
 	board[cursor] = color;
-	return getBoardImage();
 }
 
 MACHINE.advanceCursor = function() {
@@ -579,31 +635,123 @@ var WINS = [
 	[0,4,8],[2,4,6]
 ];
 
-MACHINE.getGameState = function() {	
+function checkBoard(b) {
 	for(var x=0;x<WINS.length;++x) {
-		if(WINS[x][0]!=0 && WINS[x][0]==WINS[x][1] && WINS[x][0]==WINS[x][2]) {
-			if(WINS[x][0] == 2) {
-				runner.handleEvent('CPU');
+		var tripple = WINS[x];
+		if(b[tripple[0]]==0) continue;
+		if(b[tripple[0]]==b[tripple[1]] && b[tripple[0]]==b[tripple[2]]) {
+			if(b[tripple[0]] == 1) {
+				return 'cpu';
 			} else {
-				runner.handleEvent('HUMAN');
+				return 'human';				
 			}
 		}
 	}	
 	for(var x=0;x<9;++x) {
-		if(board[x]==0) {
-			runner.handleEvent('PLAY');
+		if(b[x]==0) {
+			return 'play';
 		}
 	}	
-	runner.handleEvent('TIE');	
+	return 'tie';	
+}
+
+MACHINE.getGameState = function() {	
+	var ret = checkBoard(board);
+	runner.handleEvent(ret);	
+}
+
+function getMoveRandom() {
+	while(true) {
+		var x = randomInt(9);
+		if(board[x]==0) {
+			return x;
+		}
+	}
+}
+
+function getMoveOneder() {
+	// Look for a win
+	for(var x=0;x<9;++x) {
+		if(board[x]!=0) continue;
+		board[x] = 1;
+		var res=checkBoard(board);
+		board[x] = 0;
+		if(res=='cpu') {
+			return x;
+		}
+	}	
+	// Look for a block
+	for(var x=0;x<9;++x) {
+		if(board[x]!=0) continue;
+		board[x] = 2;
+		var res=checkBoard(board);
+		board[x] = 0;
+		if(res=='human') {
+			return x;
+		}
+	}	
+	return -1;
+}
+
+function getMoveCat() {
+	var num = 0;
+	for(var x=0;x<9;++x) {
+		if(board[x]>0) ++num;
+	}
+	
+	// Moves made (computer goes first):
+	// - 0: Pick upper left
+	// - 2: Pick center if free or bottom right
+	// - 4: If opponent in 1 - take 6. If opponent in 3 - take 2
+	if(num==0) {
+		return 0;
+	} else if(num==2) {
+		if(board[4]==0) return 4;
+		return 8;
+	} else if(num==4) {
+		if(board[1]==2) return 6;
+		if(board[3]==2) return 2;
+		return -1;
+	}
+	
+	// Moves made (human goes first):
+	// - 1: Pick center if free or random corner (bottom right ... same as 2 above)
+	// - 3: Pick random middle
+	else if(num==1) {
+		if(board[4]==0) return 4;
+		return 8;
+	} else if(num==3) {
+		if(board[1]==0) return 1;
+		if(board[3]==0) return 3;
+		if(board[5]==0) return 5;
+		if(board[7]==0) return 7;
+		return -1;
+	}
+	
+	return -1;
 }
 
 MACHINE.getCPUMove = function() {
-	// TODO this is only Mr. Random
-	var x = randomInt(8)+1;
-	do {
-		MACHINE.advanceCursor();
-		--x;
-	} while(x>0);
+	var move = 0;
+	if(cpu==2) { // CAT
+		move = getMoveOneder();
+		if(move>=0) {
+			cursor = move;
+			return;
+		}
+		move = getMoveCat();
+		if(move>=0) {
+			cursor = move;
+			return;
+		}		
+	} else if(cpu==1) { // Oneder
+		move = getMoveOneder();
+		if(move>=0) {
+			cursor = move;
+			return;
+		} 
+	} 	
+	cursor = getMoveRandom();
 }
 
 MACHINE.setButtonColor = function(value) {
@@ -631,7 +779,6 @@ MACHINE.andNotImageBuffer = function(image) {
 
 
 
-
 var runner = require('./FSMRunner.js');
 
 var hardware = require('./Hardware.js');
@@ -640,11 +787,8 @@ function buttonEventListener(event) {
 	runner.handleEvent(event);
 }
 
-hardware.init(buttonEventListener, function() {
-	
-	//hardware.drawImage(IM_SOLID_COLORS[0]);
-	MACHINE.newGame();
-	runner.init(MACHINE,'OVER_TIE');	
+hardware.init(buttonEventListener, function() {	
+	runner.init(MACHINE,'SPLASH');	
 });
 
 

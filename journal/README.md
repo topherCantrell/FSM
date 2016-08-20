@@ -1,5 +1,9 @@
 # Journal
 
+## 8/20/2016
+
+Finished up with the pi implementation. Now to make sure the propeller uses the updated state names.
+
 ## 8/17/2016
 
 Lots of work on the pi tic-tac-toe state machine. Only thing left is the game loop.

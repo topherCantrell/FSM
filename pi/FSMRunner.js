@@ -13,6 +13,7 @@ function init(m, start) {
 }
 
 function gotoState(stateName) {
+	setImmediate( function() {
 	console.log('Changing to state :'+stateName+':');
 	if(timeoutID) {		
 		clearTimeout(timeoutID);
@@ -28,12 +29,23 @@ function gotoState(stateName) {
 	}	
 	timeoutEvent = currentState['TIMEOUT'];
 	if(timeoutEvent) {
-		timeoutID = setTimeout(function() {
-			timeoutID = null;
-			runFunctions(timeoutEvent,2);
-			gotoState(timeoutEvent[1]);
-		},timeoutEvent[0]);
+		if(timeoutEvent[0]==0) {
+			setImmediate( function() {
+				console.log('NO TIME');
+				timeoutID = null;
+				runFunctions(timeoutEvent,2);
+				gotoState(timeoutEvent[1]);
+			});
+		} else {
+			timeoutID = setTimeout(function() {
+				console.log('TIMEOUT');
+				timeoutID = null;
+				runFunctions(timeoutEvent,2);
+				gotoState(timeoutEvent[1]);
+			},timeoutEvent[0]);
+		}
 	}	
+	});
 }
 
 function runFunctions(list,index) {
@@ -51,6 +63,7 @@ function runFunctions(list,index) {
 
 function handleEvent(eventName) {	
 	setImmediate( function() {
+		console.log("Event: "+eventName);
 		var ef = currentState[eventName];
 		if(ef) {
 			if(! Array.isArray(ef)) {
@@ -63,7 +76,3 @@ function handleEvent(eventName) {
 		}	
 	});
 }
-
-
-
-
