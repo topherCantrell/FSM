@@ -88,9 +88,7 @@ var TIMING = {
 		splashLetters :  250,
 		splashWord    : 1000,
 		wipe          :   75,
-		wipeHold      :  250,
-		winOn         : 1000,
-		winOff        : 1000,
+		wipeHold      :  250,		
 		pickCPUOn     : 1000,
 		pickCPUOff    : 1000,
 		pickCPUHold   : 2000,
@@ -590,10 +588,7 @@ MACHINE.newGame = function() {
 	cursor = 8; // First advance ... back to 0	
 }
 
-MACHINE.pickCPU = function() {
-	cpu = 2;
-	runner.handleEvent('cat');
-	/*
+MACHINE.pickCPU = function() {	
 	cpu = randomInt(3);
 	if(cpu==0) {
 		runner.handleEvent('random');
@@ -601,8 +596,7 @@ MACHINE.pickCPU = function() {
 		runner.handleEvent('oneder');
 	} else {
 		runner.handleEvent('cat');
-	}
-	*/
+	}	
 }
 
 MACHINE.pickFirstPlayer = function() {

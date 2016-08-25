@@ -70,7 +70,7 @@ PUB Main | fn, param, retVal
   randSeq := cnt
 
   ' Main loop
-  mainLoop(@Attract)
+  mainLoop(@SPLASH)
   ' Does not return      
 
 ' ---- State machine called functions ----
@@ -97,86 +97,41 @@ PRI GetEvent | a
   else
     return @STR_UP  
 
-PRI light | val
+' Called by state machine
+
+PRI setButtonColor  | val
   val := FSM.getFunctionParameter(0)
   BUTTON.setButtonLEDs(val)
-
-PRI draw | ptr
+  
+PRI drawImage | ptr
   ptr := FSM.getFunctionParameter(0)
   drawRawPicture(@@ptr)
-  
-PRI initWipe | ptr
-  ptr := FSM.getFunctionParameter(0)  
-  wipePtr := @@ptr
-  wipePos := 0  
 
-PRI doWipe | pic, ptr
-  
-  ' Get the current picture ptr
-  pic := word[wipePtr] 
-
-  ' Done if 0
-  if pic == 0
-    return 0
-
-  ' ObjectRelative to absolute     
-  pic := pic + @@0 
-
-  ' If this isn't the first picture then mask off the last one
+PRI andNotImageBuffer | ptr, img 
+  img := FSM.getFunctionParameter(0)
   ptr := currentPicture
-  if wipePos>0
-    ptr := imageANDN(ptr, word[wipePtr-2]+@@0)
-
-  ' OR on the image
-  ptr := imageOR(ptr, pic, @im_yellow)
-
+  ptr := imageANDN(ptr, @@img)
   drawRawPicture(ptr)
 
-  ' Ready for next time
-  wipePos := wipePos + 1
-  wipePtr := wipePtr + 2
+PRI orImageBuffer | ptr, img, col
+  img := FSM.getFunctionParameter(0)
+  col := FSM.getFunctionParameter(1)
+  ptr := currentPicture
+  case col
+    0: ptr := imageOR(ptr, @@img, @im_solid_0)
+    1: ptr := imageOR(ptr, @@img, @im_solid_1)
+    2: ptr := imageOR(ptr, @@img, @im_solid_2)
+    3: ptr := imageOR(ptr, @@img, @im_solid_3)    
+  drawRawPicture(ptr)
 
-  ' Stay in this state
-  return FSM.getCurrentState  
-
-PRI pickOpp | i
-
-  repeat i from 0 to 8
-    board[i] := 0
-    
-  opponent := randSeq?
-  if opponent < 0
-    opponent := -opponent
-  opponent := opponent // 3
-
-PRI drawOpp
-  case opponent
-    0: drawRawPicture(@im_MrRandom)
-    1: drawRawPicture(@im_Oneder)
-    2: drawRawPicture(@im_CatWoman)
-
-PRI lightWin
-  BUTTON.setButtonLEDs(winner)
-
-PRI rand | v, uppr
-  ' STR_RND  word "##0##"
-  uppr := FSM.getFunctionParameter(0)
-  v := randSeq?
-  if v<0
-    v := -v
-  v := v // uppr
-  v := v + $30
-  word[@STR_RND+4] := v
-  injectEvent := @STR_RND 
-
-PRI drawBoard | x, im
+PRI drawBoard | im, x
   im := @im_Board
   repeat x from 0 to 8
     case board[x]
-      1: im := imageOR(im,@im_cell0+x*16, @im_Green)
-      2: im := imageOR(im,@im_cell0+x*16, @im_Red)
-      3: im := imageOR(im,@im_cell0+x*16, @im_Yellow)
-  drawRawPicture(im)     
+      1: im := imageOR(im,@im_cell0+x*16, @im_solid_1)
+      2: im := imageOR(im,@im_cell0+x*16, @im_solid_2)
+      3: im := imageOR(im,@im_cell0+x*16, @im_solid_3)
+  drawRawPicture(im)
 
 PRI advanceCursor
   repeat
@@ -186,20 +141,49 @@ PRI advanceCursor
     if board[cursorPos] == 0
       return 0
 
-PRI setCurCell | val
+PRI setCellAtCursor | val
   val := FSM.getFunctionParameter(0)
   board[cursorPos] := val  
 
-PRI checkBoard
+PRI newGame | x
+  repeat x from 0 to 8
+    board[x] := 0
+  cursorPos := 8  
+
+PRI pickCPU
+  opponent := randSeq?
+  if opponent < 0
+    opponent := -opponent
+  opponent := opponent // 3
+  case opponent
+    0: injectEvent := @STR_RANDOM
+    1: injectEvent := @STR_ONEDER
+    2: injectEvent := @STR_CAT 
+  
+PRI pickFirstPlayer | x
+  x := randSeq?
+  if x < 0
+    x := -x
+  x := x // 2
+  case x
+    0: injectEvent := @STR_HUMAN
+    1: injectEvent := @STR_CPU
+
+PRI getGameState
   winner := doBoardCheck
 
-  if winner == 0
-    injectEvent := @STR_PLAY
-  else
-    injectEvent := @STR_OVER
+  ' 0 = PLAY
+  ' 1 = CPU
+  ' 2 = HUMAN
+  ' 3 = TIE
 
-PRI getMove | x, move
+  case winner
+    0: injectEvent := @STR_PLAY
+    1: injectEvent := @STR_CPU
+    2: injectEvent := @STR_HUMAN
+    3: injectEvent := @STR_TIE
 
+PRI getCPUMove | move, x
   move := -1
 
   if opponent == 1
@@ -223,6 +207,7 @@ PRI getMove | x, move
     advanceCursor
     x := x -1
 
+' Helper functions
 
 pri getMoveOneder | x, w
 
@@ -275,6 +260,11 @@ pri getMoveCAT | mn
 
 pri doBoardCheck
 
+  ' 0 = PLAY
+  ' 1 = CPU
+  ' 2 = HUMAN
+  ' 3 = TIE
+
   if board[0]<>0 and board[0]==board[1] and board[0]==board[2]
     return board[0]
   if board[3]<>0 and board[3]==board[4] and board[3]==board[5]
@@ -307,71 +297,28 @@ pri countMoves | count, x
   return count
       
 DAT
- 
+   
+' Event strings to pass to state machine
+STR_DOWN   word "##down##"
+STR_UP     word "##up##"
+STR_HUMAN  word "##human##"
+STR_CPU    word "##cpu##"
+STR_TIE    word "##tie##"
+STR_PLAY   word "##play##"
+STR_RANDOM word "##random##"
+STR_ONEDER word "##oneder##"
+STR_CAT    word "##cat##"
+
+DAT
+
+' Board
 im_Board byte $24,$24,$24,$24,$FF,$FF,$24,$24,$24,$24,$FF,$FF,$24,$24,$24,$24
 
-' Used to blank the display
-im_Wiper_B1 byte $FF,$FF,$81,$81,$81,$81,$81,$81,$81,$81,$81,$81,$81,$81,$FF,$FF
-im_Wiper_B2 byte $42,$42,$FF,$FF,$42,$42,$42,$42,$42,$42,$42,$42,$FF,$FF,$42,$42
-im_Wiper_B3 byte $18,$18,$18,$18,$18,$18,$FF,$FF,$FF,$FF,$18,$18,$18,$18,$18,$18
-'
-im_Wiper_V1 byte $01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01
-im_Wiper_V2 byte $02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02
-im_Wiper_V3 byte $04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04
-im_Wiper_V4 byte $08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08
-im_Wiper_V5 byte $10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10
-im_Wiper_V6 byte $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
-im_Wiper_V7 byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
-im_Wiper_V8 byte $80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80
-'
-im_Wiper_H1 byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$FF,$FF
-im_Wiper_H2 byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$FF,$FF,$00,$00
-im_Wiper_H3 byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$FF,$FF,$00,$00,$00,$00
-im_Wiper_H4 byte $00,$00,$00,$00,$00,$00,$00,$00,$FF,$FF,$00,$00,$00,$00,$00,$00
-im_Wiper_H5 byte $00,$00,$00,$00,$00,$00,$FF,$FF,$00,$00,$00,$00,$00,$00,$00,$00
-im_Wiper_H6 byte $00,$00,$00,$00,$FF,$FF,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-im_Wiper_H7 byte $00,$00,$FF,$FF,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-im_Wiper_H8 byte $FF,$FF,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-'
-im_Wiper_D1 byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01
-im_Wiper_D2 byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01,$02,$02
-im_Wiper_D3 byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01,$02,$02,$04,$04
-im_Wiper_D4 byte $00,$00,$00,$00,$00,$00,$00,$00,$01,$01,$02,$02,$04,$04,$08,$08
-im_Wiper_D5 byte $00,$00,$00,$00,$00,$00,$01,$01,$02,$02,$04,$04,$08,$08,$10,$10
-im_Wiper_D6 byte $00,$00,$00,$00,$01,$01,$02,$02,$04,$04,$08,$08,$10,$10,$20,$20
-im_Wiper_D7 byte $00,$00,$01,$01,$02,$02,$04,$04,$08,$08,$10,$10,$20,$20,$40,$40
-im_Wiper_D8 byte $01,$01,$02,$02,$04,$04,$08,$08,$10,$10,$20,$20,$40,$40,$80,$80
-im_Wiper_D9 byte $02,$02,$04,$04,$08,$08,$10,$10,$20,$20,$40,$40,$80,$80,$00,$00
-im_Wiper_D10 byte $04,$04,$08,$08,$10,$10,$20,$20,$40,$40,$80,$80,$00,$00,$00,$00
-im_Wiper_D11 byte $08,$08,$10,$10,$20,$20,$40,$40,$80,$80,$00,$00,$00,$00,$00,$00
-im_Wiper_D12 byte $10,$10,$20,$20,$40,$40,$80,$80,$00,$00,$00,$00,$00,$00,$00,$00
-im_Wiper_D13 byte $20,$20,$40,$40,$80,$80,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-im_Wiper_D14 byte $40,$40,$80,$80,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-im_Wiper_D15 byte $80,$80,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-
-' Opponent indicators
-im_MrRandom byte $00,$00,$06,$00,$09,$00,$D1,$00,$D1,$00,$01,$00,$06,$00,$00,$00
-im_Oneder byte $00,$00,$80,$80,$C0,$C0,$FF,$FF,$FF,$FF,$C6,$C6,$86,$86,$00,$00
-im_CatWoman byte $0E,$0E,$05,$05,$2E,$0E,$20,$00,$E0,$00,$20,$09,$20,$09,$00,$06
-
-' Splash screens
-im_Tic_T byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$0F,$00,$01,$00
-im_Tic_I byte $00,$00,$00,$09,$00,$0F,$00,$09,$00,$00,$01,$00,$0F,$00,$01,$00
-im_Tic_C byte $00,$00,$00,$09,$A0,$AF,$A0,$A9,$E0,$E0,$01,$00,$0F,$00,$01,$00
-'
-im_Tac_T byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01,$0F,$0F,$01,$01
-im_Tac_A byte $0E,$00,$05,$00,$05,$00,$0E,$00,$00,$00,$01,$01,$0F,$0F,$01,$01
-im_Tac_C byte $0E,$00,$05,$00,$05,$A0,$0E,$A0,$00,$E0,$01,$01,$0F,$0F,$01,$01
-'
-im_Toe_T byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$07,$00,$01,$00,$00
-im_Toe_O byte $07,$07,$05,$05,$07,$07,$00,$00,$00,$01,$00,$07,$00,$01,$00,$00
-im_Toe_E byte $07,$07,$8D,$05,$AF,$07,$A8,$00,$F8,$01,$00,$07,$00,$01,$00,$00
-
-' Color masks
-im_Black byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-im_Green byte $FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00
-im_Red byte $00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF,$00,$FF
-im_Yellow byte $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
+' Solid colors
+im_solid_0 byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+im_solid_1 byte $00,$FF,$00,$FF, $00,$FF,$00,$FF, $00,$FF,$00,$FF, $00,$FF,$00,$FF
+im_solid_2 byte $FF,$00,$FF,$00, $FF,$00,$FF,$00, $FF,$00,$FF,$00, $FF,$00,$FF,$00
+im_solid_3 byte $FF,$FF,$FF,$FF, $FF,$FF,$FF,$FF, $FF,$FF,$FF,$FF, $FF,$FF,$FF,$FF
 
 ' Game cells
 im_Cell0 byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$03,$03,$03,$03
@@ -382,44 +329,81 @@ im_Cell4 byte $00,$00,$00,$00,$00,$00,$18,$18,$18,$18,$00,$00,$00,$00,$00,$00
 im_Cell5 byte $18,$18,$18,$18,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 im_Cell6 byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$C0,$C0,$C0,$C0
 im_Cell7 byte $00,$00,$00,$00,$00,$00,$C0,$C0,$C0,$C0,$00,$00,$00,$00,$00,$00
-im_Cell8 byte $C0,$C0,$C0,$C0,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 
+im_Cell8 byte $C0,$C0,$C0,$C0,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
 
 
-' Sequences of images for animations
+' Wipers
+IM_W_B1 byte $FF,$FF,$81,$81,$81,$81,$81,$81,$81,$81,$81,$81,$81,$81,$FF,$FF
+IM_W_B2 byte $42,$42,$FF,$FF,$42,$42,$42,$42,$42,$42,$42,$42,$FF,$FF,$42,$42
+IM_W_B3 byte $18,$18,$18,$18,$18,$18,$FF,$FF,$FF,$FF,$18,$18,$18,$18,$18,$18
+'        
+IM_W_V1 byte $01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01,$01
+IM_W_V2 byte $02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02,$02
+IM_W_V3 byte $04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04,$04
+IM_W_V4 byte $08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08,$08
+IM_W_V5 byte $10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10
+IM_W_V6 byte $20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20,$20
+IM_W_V7 byte $40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40,$40
+IM_W_V8 byte $80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80,$80
+'        
+IM_W_H1 byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$FF,$FF
+IM_W_H2 byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$FF,$FF,$00,$00
+IM_W_H3 byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$FF,$FF,$00,$00,$00,$00
+IM_W_H4 byte $00,$00,$00,$00,$00,$00,$00,$00,$FF,$FF,$00,$00,$00,$00,$00,$00
+IM_W_H5 byte $00,$00,$00,$00,$00,$00,$FF,$FF,$00,$00,$00,$00,$00,$00,$00,$00
+IM_W_H6 byte $00,$00,$00,$00,$FF,$FF,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+IM_W_H7 byte $00,$00,$FF,$FF,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+IM_W_H8 byte $FF,$FF,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+'        
+IM_W_D1  byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01
+IM_W_D2  byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01,$02,$02
+IM_W_D3  byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01,$02,$02,$04,$04
+IM_W_D4  byte $00,$00,$00,$00,$00,$00,$00,$00,$01,$01,$02,$02,$04,$04,$08,$08
+IM_W_D5  byte $00,$00,$00,$00,$00,$00,$01,$01,$02,$02,$04,$04,$08,$08,$10,$10
+IM_W_D6  byte $00,$00,$00,$00,$01,$01,$02,$02,$04,$04,$08,$08,$10,$10,$20,$20
+IM_W_D7  byte $00,$00,$01,$01,$02,$02,$04,$04,$08,$08,$10,$10,$20,$20,$40,$40
+IM_W_D8  byte $01,$01,$02,$02,$04,$04,$08,$08,$10,$10,$20,$20,$40,$40,$80,$80
+IM_W_D9  byte $02,$02,$04,$04,$08,$08,$10,$10,$20,$20,$40,$40,$80,$80,$00,$00
+IM_W_D10 byte $04,$04,$08,$08,$10,$10,$20,$20,$40,$40,$80,$80,$00,$00,$00,$00
+IM_W_D11 byte $08,$08,$10,$10,$20,$20,$40,$40,$80,$80,$00,$00,$00,$00,$00,$00
+IM_W_D12 byte $10,$10,$20,$20,$40,$40,$80,$80,$00,$00,$00,$00,$00,$00,$00,$00
+IM_W_D13 byte $20,$20,$40,$40,$80,$80,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+IM_W_D14 byte $40,$40,$80,$80,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+IM_W_D15 byte $80,$80,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+
+' CPU Players
+IM_Random byte $00,$00,$06,$00,$09,$00,$D1,$00,$D1,$00,$01,$00,$06,$00,$00,$00
+IM_Oneder byte $00,$00,$80,$80,$C0,$C0,$FF,$FF,$FF,$FF,$C6,$C6,$86,$86,$00,$00
+IM_Cat    byte $0E,$0E,$05,$05,$2E,$0E,$20,$00,$E0,$00,$20,$09,$20,$09,$00,$06
+
+' Splash screens
+IM_S_TIC_1 byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$0F,$00,$01,$00
+IM_S_TIC_2 byte $00,$00,$00,$09,$00,$0F,$00,$09,$00,$00,$01,$00,$0F,$00,$01,$00
+IM_S_TIC_3 byte $00,$00,$00,$09,$A0,$AF,$A0,$A9,$E0,$E0,$01,$00,$0F,$00,$01,$00
 '
-seq_wiper_B  word @im_Wiper_B1, @im_Wiper_B2, @im_Board, @im_Wiper_B3, @im_Board, @im_Wiper_B2, @im_Wiper_B1, 0
-seq_wiper_B2 word @im_Wiper_B1, @im_Wiper_B2, @im_Board, @im_Wiper_B3, @im_Board, 0
-seq_wiper_V  word @im_Wiper_V1, @im_Wiper_V2, @im_Wiper_V3, @im_Wiper_V4, @im_Wiper_V5, @im_Wiper_V6, @im_Wiper_V7, @im_Wiper_V8, 0
-seq_wiper_H  word @im_Wiper_H1, @im_Wiper_H2, @im_Wiper_H3, @im_Wiper_H4, @im_Wiper_H5, @im_Wiper_H6, @im_Wiper_H7, @im_Wiper_H8, 0
-seq_wiper_D  word @im_Wiper_D1, @im_Wiper_D2, @im_Wiper_D3, @im_Wiper_D4, @im_Wiper_D5, @im_Wiper_D6, @im_Wiper_D7
-             word @im_Wiper_D8, @im_Wiper_D9, @im_Wiper_D10, @im_Wiper_D11, @im_Wiper_D12, @im_Wiper_D13, @im_Wiper_D14, @im_Wiper_D15, 0
-
-  
-' Event strings to pass to state machine
-STR_DOWN word "##DN##"
-STR_UP   word "##UP##"
-STR_OVER word "##Over##"
-STR_PLAY word "##Play##"
-
-STR_RND  word "##0##" ' Number filled in
+IM_S_TAC_1 byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$01,$0F,$0F,$01,$01
+IM_S_TAC_2 byte $0E,$00,$05,$00,$05,$00,$0E,$00,$00,$00,$01,$01,$0F,$0F,$01,$01
+IM_S_TAC_3 byte $0E,$00,$05,$00,$05,$A0,$0E,$A0,$00,$E0,$01,$01,$0F,$0F,$01,$01
+'
+IM_S_TOE_1 byte $00,$00,$00,$00,$00,$00,$00,$00,$00,$01,$00,$07,$00,$01,$00,$00
+IM_S_TOE_2 byte $07,$07,$05,$05,$07,$07,$00,$00,$00,$01,$00,$07,$00,$01,$00,$00
+IM_S_TOE_3 byte $07,$07,$8D,$05,$AF,$07,$A8,$00,$F8,$01,$00,$07,$00,$01,$00,$00
 
 CON
 
-Tw = 1    ' Time between wiper animations
-Ta = 2    ' Time between letters in attract
-Tah = 8   ' Time to hold word in attract
-
-Tos = 5   ' Time between opponent-picture flashes in init
-Toh = 8   ' Time to hold opponent-picture
-Tov = 5   ' Time between animations in game-over
-
-Tc = 4    ' Time between player cursor blinks
-Tch = 10  ' Time button must be help to register move
-Toc = 4   ' Time between opponent cursor blinks
-
-' ----- ---------------------------- -----
-' ----- FSM GENERATED CODE HERE DOWN -----
-' ----- ---------------------------- -----
+T_splashLetters =  250 / 50/2 
+T_splashWord    = 1000 / 50/2  
+T_wipe          =  100 / 50/2      
+T_wipeHold      =  250 / 50/2           
+T_pickCPUOn     = 1000 / 50/2                
+T_pickCPUOff    = 1000 / 50/2                     
+T_pickCPUHold   = 2000 / 50/2  
+T_winOn         =  500 / 50/2  
+T_winOff        =  500 / 50/2  
+T_inputDown     =  500 / 50/2  
+T_inputHeld     = 1000 / 50/2  
+T_cpuOn         =  500 / 50/2  
+T_cpuOff        =  500 / 50/2   
 
 PRI mainLoop(state) | fn, retVal
 
@@ -439,233 +423,575 @@ DAT
 
 fsmData
 
-Attract
-  word "##!##", FN_light, 1
-  word "##T##",0,@WipeB, FN_initWipe, @seq_wiper_B
-  word "**"
+SPLASH   
+        word "##!##",  FN_setButtonColor,2, "%%", FN_drawImage, @IM_S_TIC_1
+        word "##T##",  T_splashLetters, @Tic_TI
+        word "##down##",  @PICKS
+        word "**"
+        
+Tic_TI  
+        word "##!##",  FN_drawImage, @IM_S_TIC_2
+        word "##T##",  T_splashLetters, @Tic_TIC
+        word "##down##",  @PICKS
+        word "**"
+        
+Tic_TIC 
+        word "##!##",  FN_drawImage, @IM_S_TIC_3
+        word "##T##",  T_splashWord, @WipeH_1
+        word "##down##",  @PICKS
+        word "**"
+                
+        
+WipeH_1 
+        word "##!##",  FN_orImageBuffer, @IM_W_H1,3
+        word "##T##",  T_wipe, @WipeH_2
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeH_2 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_H1, "%%", FN_orImageBuffer, @IM_W_H2,3
+        word "##T##",  T_wipe, @WipeH_3
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeH_3 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_H2, "%%", FN_orImageBuffer, @IM_W_H3,3
+        word "##T##",  T_wipe, @WipeH_4
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeH_4 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_H3, "%%", FN_orImageBuffer, @IM_W_H4,3
+        word "##T##",  T_wipe, @WipeH_5
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeH_5 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_H4, "%%", FN_orImageBuffer, @IM_W_H5,3
+        word "##T##",  T_wipe, @WipeH_6
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeH_6 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_H5, "%%", FN_orImageBuffer, @IM_W_H6,3
+        word "##T##",  T_wipe, @WipeH_7
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeH_7 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_H6, "%%", FN_orImageBuffer, @IM_W_H7,3
+        word "##T##",  T_wipe, @WipeH_8
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeH_8 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_H7, "%%", FN_orImageBuffer, @IM_W_H8,3
+        word "##T##",  T_wipe, @WipeH_HOLD
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeH_HOLD 
+        word "##!##",  FN_drawImage,@IM_SOLID_0
+        word "##T##",  T_wipeHold, @Tac_T
+        word "##down##",  @PICKS
+        word "**"
+        
+        
+Tac_T   
+        word "##!##",  FN_drawImage, @IM_S_TAC_1
+        word "##T##",  T_splashLetters, @Tac_TA
+        word "##down##",  @PICKS
+        word "**"
+        
+Tac_TA  
+        word "##!##",  FN_drawImage, @IM_S_TAC_2
+        word "##T##",  T_splashLetters, @Tac_TAC
+        word "##down##",  @PICKS
+        word "**"
+        
+Tac_TAC 
+        word "##!##",  FN_drawImage, @IM_S_TAC_3
+        word "##T##",  T_splashWord, @WipeV_1
+        word "##down##",  @PICKS
+        word "**"
+        
+        
+WipeV_1 
+        word "##!##",  FN_orImageBuffer, @IM_W_V1,3
+        word "##T##",  T_wipe, @WipeV_2
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeV_2 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_V1, "%%", FN_orImageBuffer, @IM_W_V2,3
+        word "##T##",  T_wipe, @WipeV_3
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeV_3 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_V2, "%%", FN_orImageBuffer, @IM_W_V3,3
+        word "##T##",  T_wipe, @WipeV_4
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeV_4 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_V3, "%%", FN_orImageBuffer, @IM_W_V4,3
+        word "##T##",  T_wipe, @WipeV_5
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeV_5 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_V4, "%%", FN_orImageBuffer, @IM_W_V5,3
+        word "##T##",  T_wipe, @WipeV_6
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeV_6 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_V5, "%%", FN_orImageBuffer, @IM_W_V6,3
+        word "##T##",  T_wipe, @WipeV_7
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeV_7 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_V6, "%%", FN_orImageBuffer, @IM_W_V7,3
+        word "##T##",  T_wipe, @WipeV_8
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeV_8 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_V7, "%%", FN_orImageBuffer, @IM_W_V8,3
+        word "##T##",  T_wipe, @WipeV_HOLD
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeV_HOLD 
+        word "##!##",  FN_drawImage,@IM_SOLID_0
+        word "##T##",  T_wipeHold, @Toe_T
+        word "##down##",  @PICKS
+        word "**"
+        
+        
+Toe_T   
+        word "##!##",  FN_drawImage, @IM_S_TOE_1
+        word "##T##",  T_splashLetters, @Toe_TO
+        word "##down##",  @PICKS
+        word "**"
+        
+Toe_TO  
+        word "##!##",  FN_drawImage, @IM_S_TOE_2
+        word "##T##",  T_splashLetters, @Toe_TOE
+        word "##down##",  @PICKS
+        word "**"
+        
+Toe_TOE 
+        word "##!##",  FN_drawImage, @IM_S_TOE_3
+        word "##T##",  T_splashWord, @WipeB_1
+        word "##down##",  @PICKS
+        word "**"
+        
+        
+WipeB_1 
+        word "##!##",  FN_orImageBuffer, @IM_W_B1,3
+        word "##T##",  T_wipe, @WipeB_2
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeB_2 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_B1, "%%", FN_orImageBuffer, @IM_W_B2,3
+        word "##T##",  T_wipe, @WipeB_3
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeB_3 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_B2, "%%", FN_orImageBuffer, @IM_BOARD,3
+        word "##T##",  T_wipe, @WipeB_4
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeB_4 
+        word "##!##",  FN_andNotImageBuffer,@IM_BOARD, "%%", FN_orImageBuffer, @IM_W_B3,3
+        word "##T##",  T_wipe, @WipeB_5
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeB_5 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_B3, "%%", FN_orImageBuffer, @IM_BOARD,3
+        word "##T##",  T_wipe, @WipeB_6
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeB_6 
+        word "##!##",  FN_andNotImageBuffer,@IM_BOARD, "%%", FN_orImageBuffer, @IM_W_B2,3
+        word "##T##",  T_wipe, @WipeB_7
+        word "##down##",  @PICKS
+        word "**"
+        
+WipeB_7 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_B2, "%%", FN_orImageBuffer, @IM_W_B1,3
+        word "##T##",  T_wipe, @WipeB_HOLD
+        word "##down##",  @PICKS
+        word "**"
+                
+WipeB_HOLD 
+        word "##!##",  FN_drawImage,@IM_SOLID_0
+        word "##T##",  T_wipeHold, @SPLASH
+        word "##down##",  @PICKS
+        word "**"
 
-WipeB
-  word "##T##",Tw,@TicT, FN_doWipe
-  word "##DN##", @Init
-  word "**"
 
-TicT
-  word "##!##", FN_draw, @im_Tic_T
-  word "##T##",Ta,@TicI
-  word "##DN##", @Init
-  word "**"
+WIN_cpu 
+        word "##!##",  FN_drawBoard, "%%", FN_setButtonColor, 1
+        word "##T##",  T_winOn, @WIN_cpu2
+        word "**"       
+        
+WIN_cpu2 
+        word "##!##",  FN_drawImage, IM_BOARD, "%%", FN_setButtonColor,0
+        word "##T##",  T_winOff, @WIN_cpu
+        word "**"
+                
+        
+WIN_human 
+        word "##!##",  FN_drawBoard, "%%", FN_setButtonColor, 2
+        word "##T##",  T_winOn, @WIN_human2
+        word "**"               
+        
+WIN_human2 
+        word "##!##",  FN_drawImage, IM_BOARD, "%%", FN_setButtonColor,0
+        word "##T##",  T_winOff, @WIN_human
+        word "**"
+                
+        
+WIN_tie 
+        word "##!##",  FN_drawBoard, "%%", FN_setButtonColor, 3
+        word "##T##",  T_winOn, @WIN_tie2       
+        word "**"       
+        
+WIN_tie2 
+        word "##!##",  FN_drawImage, IM_BOARD, "%%", FN_setButtonColor,0
+        word "##T##",  T_winOff, @WIN_tie
+        word "**"
 
-TicI
-  word "##!##", FN_draw, @im_Tic_I
-  word "##T##",Ta,@TicC
-  word "##DN##", @Init
-  word "**"
+PICKS 
+        word "##!##",   FN_setButtonColor,0,"%%",FN_newGame, "%%",FN_pickCPU
+        word "##random##",  @Opp_RANDOM
+        word "##oneder##", @Opp_ONEDER
+        word "##cat##",    @Opp_CAT
+        word "**"
+        
+        
+Opp_RANDOM 
+        word "##!##",  FN_drawImage, @IM_Random
+        word "##T##",  T_pickCPUOn, @Opp_RANDOM2
+        word "**"
+        
+Opp_RANDOM2 
+        word "##!##",  FN_drawImage, @IM_SOLID_0
+        word "##T##",  T_pickCPUOff, @Opp_RANDOM3        
+        word "**"
+        
+Opp_RANDOM3 
+        word "##!##",  FN_drawImage, @IM_Random
+        word "##T##",  T_pickCPUHold, @PickWipe_1
+        word "**"
+                
+        
+Opp_ONEDER 
+        word "##!##",  FN_drawImage, @IM_oneder
+        word "##T##",  T_pickCPUOn, @Opp_ONEDER2
+        word "**"
+        
+Opp_ONEDER2 
+        word "##!##",  FN_drawImage, @IM_SOLID_0
+        word "##T##",  T_pickCPUOff, @Opp_ONEDER3       
+        word "**"
+        
+Opp_ONEDER3 
+        word "##!##",  FN_drawImage, @IM_oneder
+        word "##T##",  T_pickCPUHold, @PickWipe_1
+        word "**"
+        
+        
+Opp_CAT 
+        word "##!##",  FN_drawImage, @IM_Cat
+        word "##T##",  T_pickCPUOn, @Opp_CAT2
+        word "**"
+        
+Opp_CAT2 
+        word "##!##",  FN_drawImage, @IM_SOLID_0
+        word "##T##",  T_pickCPUOff, @Opp_CAT3  
+        word "**"
+        
+Opp_CAT3 
+        word "##!##",  FN_drawImage, @IM_Cat
+        word "##T##",  T_pickCPUHold, @PickWipe_1
+        word "**"
+                
+        
 
-TicC
-  word "##!##", FN_draw, @im_Tic_C
-  word "##T##",Tah,@WipeH, FN_initWipe, @seq_wiper_H
-  word "##DN##", @Init
-  word "**"
-
-WipeH
-  word "##T##",Tw,@TacT, FN_doWipe
-  word "##DN##", @Init
-  word "**"
-
-TacT
-  word "##!##", FN_draw, @im_Tac_T
-  word "##T##",Ta,@TacA
-  word "##DN##", @Init
-  word "**"
-
-TacA
-  word "##!##", FN_draw, @im_Tac_A
-  word "##T##",Ta,@TacC
-  word "##DN##", @Init
-  word "**"
-
-TacC
-  word "##!##", FN_draw, @im_Tac_C
-  word "##T##",Tah,@WipeV, FN_initWipe, @seq_wiper_V
-  word "##DN##", @Init
-  word "**"
-
-WipeV
-  word "##T##",Tw,@ToeT, FN_doWipe
-  word "##DN##", @Init
-  word "**"
-
-ToeT
-  word "##!##", FN_draw, @im_Toe_T
-  word "##T##",Ta,@ToeO
-  word "##DN##", @Init
-  word "**"
-
-ToeO
-  word "##!##", FN_draw, @im_Toe_O
-  word "##T##",Ta,@ToeE
-  word "##DN##", @Init
-  word "**"
-
-ToeE
-  word "##!##", FN_draw, @im_Toe_E
-  word "##T##",Tah,@WipeB, FN_initWipe, @seq_wiper_B
-  word "##DN##", @Init
-  word "**"
-
-Init
-  word "##!##", FN_light, 0, "%%", FN_pickOpp
-  word "##T##",0,@WipeD, FN_initWipe, @seq_wiper_D
-  word "**"
-
-WipeD
-  word "##T##",Tw,@ShowOpp1, FN_doWipe
-  word "**"
-
-ShowOpp1
-  word "##!##", FN_drawOpp
-  word "##T##",Tos,@ShowOpp2
-  word "**"
-
-ShowOpp2
-  word "##!##", FN_draw, @im_Black
-  word "##T##",Tos,@ShowOpp3
-  word "**"
-
-ShowOpp3
-  word "##!##", FN_drawOpp
-  word "##T##",Toh,@WipeB2, FN_initWipe, @seq_wiper_B2
-  word "**"
-
-WipeB2
-  word "##T##",Tw,@WhoFirst, FN_doWipe
-  word "**"
-
-WhoFirst
-  word "##!##", FN_rand, 2
-  word "##1##", @Opp
-  word "##0##", @Player
-  word "**"
-
-Over
-  word "##!##", FN_draw, @im_Black, "%%", FN_light, 0
-  word "##T##",Tov,@Over2
-  word "##DN##", @Attract
-  word "**"
-
-Over2
-  word "##!##", FN_drawBoard, "%%", FN_lightWin
-  word "##T##",Tov,@Over
-  word "##DN##", @Attract
-  word "**"
-
-Player
-  word "##!##", FN_light, 1, "%%", FN_advanceCursor
-  word "##T##",0,@InputA
-  word "**"
-
-InputA
-  word "##!##", FN_setCurCell, 3, "%%", FN_drawBoard
-  word "##T##",Tc,@InputB
-  word "##DN##", @InputC
-  word "**"
-
-InputB
-  word "##!##", FN_setCurCell, 0, "%%", FN_drawBoard
-  word "##T##",Tc,@InputA
-  word "##DN##", @InputC
-  word "**"
-
-InputC
-  word "##!##", FN_setCurCell, 3, "%%", FN_drawBoard
-  word "##T##",Tch,@HMove
-  word "##UP##", @Player, FN_setCurCell, 0
-  word "**"
-
-HMove
-  word "##!##", FN_setCurCell, 1, "%%", FN_drawBoard
-  word "##T##",Tc,@CheckH
-  word "**"
-
-CheckH
-  word "##!##", FN_checkBoard
-  word "##Over##", @Over
-  word "##Play##", @Opp
-  word "**"
-
-Opp
-  word "##!##", FN_light, 2, "%%", FN_getMove
-  word "##T##",0,@OppC1
-  word "**"
-
-OppC1
-  word "##!##", FN_setCurCell, 3, "%%", FN_drawBoard
-  word "##T##",Toc,@OppC2
-  word "**"
-
-OppC2
-  word "##!##", FN_setCurCell, 0, "%%", FN_drawBoard
-  word "##T##",Toc,@OppC3
-  word "**"
-
-OppC3
-  word "##!##", FN_setCurCell, 3, "%%", FN_drawBoard
-  word "##T##",Toc,@OMove
-  word "**"
-
-OMove
-  word "##!##", FN_setCurCell, 2, "%%", FN_drawBoard
-  word "##T##",Toc,@CheckO
-  word "**"
-
-CheckO
-  word "##!##", FN_checkBoard
-  word "##Over##", @Over
-  word "##Play##", @Player
-  word "**"
+PickWipe_1 
+        word "##!##",  FN_orImageBuffer, @IM_W_B1,3
+        word "##T##",  T_wipe, @PickWipe_2
+        word "**"
+        
+PickWipe_2 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_B1, "%%", FN_orImageBuffer, @IM_W_B2,3
+        word "##T##",  T_wipe, @PickWipe_3
+        word "**"
+        
+PickWipe_3 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_B2, "%%", FN_orImageBuffer, @IM_BOARD,3
+        word "##T##",  T_wipe, @PickWipe_4
+        word "**"
+        
+PickWipe_4 
+        word "##!##",  FN_andNotImageBuffer,@IM_BOARD, "%%", FN_orImageBuffer, @IM_W_B3,3
+        word "##T##",  T_wipe, @PickWipe_5
+        word "**"
+        
+PickWipe_5 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_B3, "%%", FN_orImageBuffer, @IM_BOARD,3
+        word "##T##",  T_wipeHold, @Pick2
+        word "**"
+                
+        
+Pick2 
+        word "##!##",  FN_pickFirstPlayer
+        word "##human##",  @PLAY_HUMAN
+        word "##cpu##",    @PLAY_CPU    
+        word "**"
+        
+        
+        
+OVER_HUMAN 
+        word "##!##",  FN_setButtonColor,2, "%%", FN_drawBoard
+        word "##T##",  T_winOn, @OVER_HUMAN2
+        word "##down##",  @OverWipe_1
+        word "**"
+        
+OVER_HUMAN2 
+        word "##!##",  FN_setButtonColor,0, "%%", FN_drawImage, @IM_SOLID_0
+        word "##T##",  T_winOff, @OVER_HUMAN
+        word "##down##",  @OverWipe_1
+        word "**"
+        
+        
+OVER_CPU 
+        word "##!##",  FN_setButtonColor,1, "%%", FN_drawBoard
+        word "##T##",  T_winOn, @OVER_CPU2
+        word "##down##",  @OverWipe_1
+        word "**"
+        
+OVER_CPU2 
+        word "##!##",  FN_setButtonColor,0, "%%", FN_drawImage, @IM_SOLID_0
+        word "##T##",  T_winOff, @OVER_CPU
+        word "##down##",  @OverWipe_1
+        word "**"
+        
+        
+OVER_TIE 
+        word "##!##",  FN_setButtonColor,3, "%%", FN_drawBoard
+        word "##T##",  T_winOn, @OVER_TIE2
+        word "##down##",  @OverWipe_1
+        word "**"
+        
+OVER_TIE2 
+        word "##!##",  FN_setButtonColor,0, "%%", FN_drawImage, @IM_SOLID_0
+        word "##T##",  T_winOff, @OVER_TIE
+        word "##down##",  @OverWipe_1
+        word "**"
+        
+        
+OverWipe_1 
+        word "##!##",  FN_setButtonColor,0,"%%",FN_orImageBuffer, @IM_W_D1,3
+        word "##T##",  T_wipe, @OverWipe_2
+        word "**"
+        
+OverWipe_2 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_D1, "%%", FN_orImageBuffer, @IM_W_D2,3
+        word "##T##",  T_wipe, @OverWipe_3
+        word "**"
+        
+OverWipe_3 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_D2, "%%", FN_orImageBuffer, @IM_W_D3,3
+        word "##T##",  T_wipe, @OverWipe_4
+        word "**"
+        
+OverWipe_4 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_D3, "%%", FN_orImageBuffer, @IM_W_D4,3
+        word "##T##",  T_wipe, @OverWipe_5
+        word "**"
+        
+OverWipe_5 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_D4, "%%", FN_orImageBuffer, @IM_W_D5,3
+        word "##T##",  T_wipe, @OverWipe_6
+        word "**"
+        
+OverWipe_6 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_D5, "%%", FN_orImageBuffer, @IM_W_D6,3
+        word "##T##",  T_wipe, @OverWipe_7
+        word "**"
+        
+OverWipe_7 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_D6, "%%", FN_orImageBuffer, @IM_W_D7,3
+        word "##T##",  T_wipe, @OverWipe_8
+        word "**"
+        
+OverWipe_8 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_D7, "%%", FN_orImageBuffer, @IM_W_D8,3
+        word "##T##",  T_wipe, @OverWipe_9
+        word "**"
+        
+OverWipe_9 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_D8, "%%", FN_orImageBuffer, @IM_W_D9,3
+        word "##T##",  T_wipe, @OverWipe_10
+        word "**"
+        
+OverWipe_10 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_D9, "%%", FN_orImageBuffer, @IM_W_D10,3
+        word "##T##",  T_wipe, @OverWipe_11
+        word "**"
+        
+OverWipe_11 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_D10, "%%", FN_orImageBuffer, @IM_W_D11,3
+        word "##T##",  T_wipe, @OverWipe_12
+        word "**"
+        
+OverWipe_12 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_D11, "%%", FN_orImageBuffer, @IM_W_D12,3
+        word "##T##",  T_wipe, @OverWipe_13
+        
+OverWipe_13 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_D12, "%%", FN_orImageBuffer, @IM_W_D13,3
+        word "##T##",  T_wipe, @OverWipe_14
+        word "**"
+        
+OverWipe_14 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_D13, "%%", FN_orImageBuffer, @IM_W_D14,3
+        word "##T##",  T_wipe, @OverWipe_15
+        word "**"
+        
+OverWipe_15 
+        word "##!##",  FN_andNotImageBuffer,@IM_W_D14, "%%", FN_orImageBuffer, @IM_W_D15,3
+        word "##T##",  T_wipe, @OverWipe_HOLD
+        word "**"
+                
+OverWipe_HOLD 
+        word "##!##",  FN_drawImage,@IM_SOLID_0
+        word "##T##",  T_wipeHold, @SPLASH   
+        word "**"     
+        
+                
+        
+PLAY_HUMAN 
+        word "##!##",    FN_setButtonColor, 2, "%%", FN_advanceCursor
+        word "##T##",  0, @InputA
+        word "**"
+        
+        
+InputA 
+        word "##!##",  FN_setCellAtCursor, 3, "%%", FN_drawBoard
+        word "##T##",  T_inputDown, @InputB
+        word "##down##",  @InputC
+        word "**"
+        
+        
+InputB 
+        word "##!##",  FN_setCellAtCursor, 0, "%%", FN_drawBoard
+        word "##T##",  T_inputDown, @InputA
+        word "##down##",  @InputC
+        word "**"
+        
+        
+InputC 
+        word "##!##",  FN_setCellAtCursor, 3, "%%", FN_drawBoard
+        word "##T##",  T_inputHeld, @HMove
+        word "##up##",  @PLAY_HUMAN, FN_setCellAtCursor, 0
+        word "**"
+        
+                        
+HMove 
+        word "##!##",  FN_setCellAtCursor, 2, "%%",  FN_drawBoard, "%%", FN_getGameState
+        word "##cpu##",    @OVER_CPU
+        word "##human##",  @OVER_HUMAN
+        word "##play##",   @PLAY_CPU
+        word "##tie##",    @OVER_TIE
+        word "**"            
+        
+                
+PLAY_CPU 
+        word "##!##",  FN_setButtonColor,1, "%%", FN_getCPUMove, "%%", FN_setCellAtCursor,1,"%%",FN_drawBoard
+        word "##T##",  T_cpuOn, @OppC1
+        word "**"
+        
+        
+OppC1 
+        word "##!##",  FN_setCellAtCursor,0, "%%", FN_drawBoard
+        word "##T##",  T_cpuOff, @OppC2
+        word "**"
+        
+        
+OppC2 
+        word "##!##",  FN_setCellAtCursor,1, "%%", FN_drawBoard
+        word "##T##",  T_cpuOn, @OppC3
+        word "**"
+        
+        
+OppC3 
+        word "##!##",  FN_setCellAtCursor,0, "%%", FN_drawBoard
+        word "##T##",  T_cpuOff, @MoveCPU
+        word "**"
+        
+        
+    MoveCPU 
+        word "##!##",  FN_setCellAtCursor,1, "%%", FN_drawBoard, "%%", FN_getGameState
+        word "##cpu##",    @OVER_CPU
+        word "##human##",  @OVER_HUMAN
+        word "##play##",   @PLAY_HUMAN
+        word "##tie##",    @OVER_TIE
+        word "**"
+                
 
 CON
-  FN_light = 256
-  FN_initWipe = 257
-  FN_doWipe = 258
-  FN_draw = 259
-  FN_pickOpp = 260
-  FN_drawOpp = 261
-  FN_rand = 262
-  FN_drawBoard = 263
-  FN_lightWin = 264
-  FN_advanceCursor = 265
-  FN_setCurCell = 266
-  FN_checkBoard = 267
-  FN_getMove = 268
+  FN_setButtonColor    = 256
+  FN_drawImage         = 257
+  FN_drawBoard         = 258
+  FN_orImageBuffer     = 259
+  FN_andNotImageBuffer = 260
+  FN_newGame           = 261
+  FN_pickCPU           = 262
+  FN_pickFirstPlayer   = 263
+  FN_advanceCursor     = 264
+  FN_setCellAtCursor   = 265
+  FN_getGameState      = 266
+  FN_getCPUMove        = 267
 
 PRI dispatch(fn)
   CASE fn
     0:
       return GetEvent
-    FN_light:
-      return light
-    FN_initWipe:
-      return initWipe
-    FN_doWipe:
-      return doWipe
-    FN_draw:
-      return draw
-    FN_pickOpp:
-      return pickOpp
-    FN_drawOpp:
-      return drawOpp
-    FN_rand:
-      return rand
+
+    FN_setButtonColor:
+      return setButtonColor 
+    FN_drawImage:
+      return drawImage
     FN_drawBoard:
       return drawBoard
-    FN_lightWin:
-      return lightWin
+    FN_orImageBuffer:
+      return orImageBuffer 
+    FN_andNotImageBuffer:
+      return andNotImageBuffer
+    FN_newGame:
+      return newGame    
+    FN_pickCPU:
+      return pickCPU 
+    FN_pickFirstPlayer:
+      return pickFirstPlayer    
     FN_advanceCursor:
-      return advanceCursor
-    FN_setCurCell:
-      return setCurCell
-    FN_checkBoard:
-      return checkBoard
-    FN_getMove:
-      return getMove
+      return advanceCursor 
+    FN_setCellAtCursor:
+      return setCellAtCursor 
+    FN_getGameState:
+      return getGameState   
+    FN_getCPUMove:
+      return getCPUMove
+      
