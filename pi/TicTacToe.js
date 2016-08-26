@@ -554,8 +554,6 @@ var MACHINE = {
 	
 }
 
-
-
 var cursor;
 var board;
 var cpu;
