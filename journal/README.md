@@ -1,5 +1,10 @@
 # Journal
 
+## 9/6/2016
+
+I ordered two LED switches so I can run both pi and prop at the same time for a photograph. I ordered
+the tic-tac-tome again -- also for a photo.
+
 ## 8/20/2016
 
 Finished up with the pi implementation. Now to make sure the propeller uses the updated state names.

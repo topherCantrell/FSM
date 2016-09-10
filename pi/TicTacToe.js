@@ -102,8 +102,55 @@ var TIMING = {
 
 var MACHINE = {	
 		
-	// ------------------------------------------------
 		
+	FOR_PHOTO : {
+		ENTER : ['newGame', 'and', 'setButtonColor',2, 
+		         'and', 'advanceCursor', 
+		         'and', 'setCellAtCursor',2,
+		         'and', 'advanceCursor', 
+		         'and', 'advanceCursor',
+		         'and', 'setCellAtCursor',2,
+		         'and', 'advanceCursor', 
+		         'and', 'setCellAtCursor',1,
+		         'and', 'advanceCursor', 
+		         'and', 'setCellAtCursor',2,
+		         'and', 'advanceCursor',
+		         'and', 'advanceCursor',
+		         'and', 'setCellAtCursor',1,
+		         'and', 'advanceCursor',
+		         'and', 'advanceCursor',
+		         'and', 'setCellAtCursor',1,
+		         'and', 'drawBoard']
+	},
+	
+	FOR_PHOTO_2: {
+		ENTER : ['newGame', 'and', 'setButtonColor',2, 
+		         'and', 'advanceCursor', 
+		         'and', 'setCellAtCursor',2,
+		         'and', 'advanceCursor', 
+		         'and', 'setCellAtCursor',1,
+		         'and', 'advanceCursor',
+		         'and', 'setCellAtCursor',2,
+		         
+		         'and', 'advanceCursor', 
+		         'and', 'setCellAtCursor',0,
+		         'and', 'advanceCursor', 
+		         'and', 'setCellAtCursor',1,
+		         'and', 'advanceCursor',
+		         'and', 'setCellAtCursor',1,
+		         
+		         'and', 'advanceCursor',
+		         'and', 'setCellAtCursor',1,
+		         'and', 'advanceCursor',
+		         'and', 'setCellAtCursor',2,
+		         'and', 'advanceCursor',
+		         'and', 'setCellAtCursor',2,
+		         
+		         'and', 'drawBoard']
+	},
+		
+	// ------------------------------------------------		
+	
 	SPLASH   : {
 		ENTER : ['setButtonColor',2, 'and', 'drawImage', IM_SPLASH_SCREENS.tic[0]],
 		TIMEOUT : [TIMING.splashLetters, 'Tic_TI'],
@@ -552,6 +599,7 @@ var MACHINE = {
 		tie :   'OVER_TIE'
 	},	
 	
+	
 }
 
 var cursor;
@@ -780,7 +828,8 @@ function buttonEventListener(event) {
 }
 
 hardware.init(buttonEventListener, function() {	
-	runner.init(MACHINE,'SPLASH');	
+	//runner.init(MACHINE,'SPLASH');	
+	runner.init(MACHINE,'FOR_PHOTO_2');
 });
 
 

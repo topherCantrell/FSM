@@ -14,9 +14,9 @@ exports.drawImage = drawImage;
 
 function init(buttonListener, cb) {
 
-	i2c1.writeByteSync(0x72,0x21,0);
-	i2c1.writeByteSync(0x72,0xEF,0);
-	i2c1.writeByteSync(0x72,0x81,0);
+	i2c1.writeByteSync(0x71,0x21,0);
+	i2c1.writeByteSync(0x71,0xEF,0);
+	i2c1.writeByteSync(0x71,0x81,0);
 	drawImage([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
 	
 	gpio.setup(GREEN_PIN, gpio.DIR_OUT, function(err) {
@@ -52,6 +52,6 @@ function setButtonColor(color) {
 
 function drawImage(image) {
 	for (var x=0;x<16;++x) {
-		i2c1.writeByteSync(0x72,x,image[x]);
+		i2c1.writeByteSync(0x71,x,image[x]);
 	}
 }

@@ -421,7 +421,12 @@ DAT
 
 fsmData
 
-SPLASH   
+
+SPLASH
+FOR_PHOTO
+        'word "##!##",     FN_drawImage, @IM_S_TOE_3, "%%", FN_setButtonColor, 1
+        'word "**"
+   
         word "##!##",     FN_setButtonColor,2, "%%", FN_drawImage, @IM_S_TIC_1
         word "##T##",     T_splashLetters, @Tic_TI
         word "##down##",  @PICKS
