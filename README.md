@@ -7,3 +7,5 @@ http://www.mouser.com/ProductDetail/NKK-Switches/KP0115ACBKG036CF-2SJB
 
 
 ![](https://github.com/topherCantrell/FSM/blob/master/art/PiProp.jpg)
+
+![](https://github.com/topherCantrell/FSM/blob/master/art/PlayingBook.jpg)

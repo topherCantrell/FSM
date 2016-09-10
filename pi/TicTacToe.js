@@ -144,7 +144,7 @@ var MACHINE = {
 		         'and', 'advanceCursor',
 		         'and', 'setCellAtCursor',2,
 		         'and', 'advanceCursor',
-		         'and', 'setCellAtCursor',2,
+		         'and', 'setCellAtCursor',3,
 		         
 		         'and', 'drawBoard']
 	},
@@ -605,6 +605,7 @@ var MACHINE = {
 var cursor;
 var board;
 var cpu;
+var catType;
 
 var imageBuffer = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 
@@ -635,12 +636,13 @@ MACHINE.newGame = function() {
 }
 
 MACHINE.pickCPU = function() {	
-	cpu = randomInt(3);
+	cpu = randomInt(3);	
 	if(cpu==0) {
-		runner.handleEvent('random');
+		runner.handleEvent('random'); 
 	} else if(cpu==1) {
-		runner.handleEvent('oneder');
+		runner.handleEvent('oneder'); 
 	} else {
+		catType = randomInt(2);
 		runner.handleEvent('cat');
 	}	
 }
@@ -739,6 +741,44 @@ function getMoveCat() {
 		if(board[x]>0) ++num;
 	}
 	
+	if(num==0) {
+		return 4;
+	} else if(num==2) {
+		if(board[0]==2 || board[2]==2) return 1;
+		if(board[6]==2 || board[8]==2) return 7;
+		if(board[1]==2 || board[5]==2) return 2;
+		if(board[3]==2 || board[7]==2) return 6;
+		// Those are all the choices since CAT took middle 1st
+	} else if(num==4) {
+		if(board[0]==2 || board[8]==2) return 6;
+		if(board[2]==2 || board[6]==2) return 8;
+		if(board[1]==1 || board[3]==1) return 8;
+		if(board[5]==1 || board[7]==1) return 0;
+	}
+	
+	// Moves made (human goes first):
+	// - 1: Pick center if free or random corner (bottom right ... same as 2 above)
+	// - 3: Pick random middle
+	else if(num==1) {
+		if(board[4]==0) return 4;
+		return 8;
+	} else if(num==3) {
+		if(board[1]==0) return 1;
+		if(board[3]==0) return 3;
+		if(board[5]==0) return 5;
+		if(board[7]==0) return 7;
+		return -1;
+	}
+	
+	return -1;
+}
+
+function getMoveCat2() {
+	var num = 0;
+	for(var x=0;x<9;++x) {
+		if(board[x]>0) ++num;
+	}
+	
 	// Moves made (computer goes first):
 	// - 0: Pick upper left
 	// - 2: Pick center if free or bottom right
@@ -750,7 +790,7 @@ function getMoveCat() {
 		return 8;
 	} else if(num==4) {
 		if(board[1]==2) return 6;
-		if(board[3]==2) return 2;
+		if(board[3]==2) return 2; 
 		return -1;
 	}
 	
@@ -779,7 +819,11 @@ MACHINE.getCPUMove = function() {
 			cursor = move;
 			return;
 		}
-		move = getMoveCat();
+		if(catType) {
+			move = getMoveCat();
+		} else {
+			move = getMoveCat2()
+		}
 		if(move>=0) {
 			cursor = move;
 			return;
@@ -829,6 +873,7 @@ function buttonEventListener(event) {
 
 hardware.init(buttonEventListener, function() {	
 	//runner.init(MACHINE,'SPLASH');	
+	//runner.init(MACHINE,'FOR_PHOTO');
 	runner.init(MACHINE,'FOR_PHOTO_2');
 });
 
