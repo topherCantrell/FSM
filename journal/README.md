@@ -1,5 +1,15 @@
 # Journal
 
+## 9/11/2016
+
+I made a light tent and took some good pics of the project. I cleaned up the word-art schematic.
+
+Left to do:
+  * Draw updated state machine
+  * Clean up the code
+  * Pull snippets from the code (3 or 4)
+  * Write the article
+
 ## 9/6/2016
 
 I ordered two LED switches so I can run both pi and prop at the same time for a photograph. I ordered
