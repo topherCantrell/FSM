@@ -872,9 +872,9 @@ function buttonEventListener(event) {
 }
 
 hardware.init(buttonEventListener, function() {	
-	//runner.init(MACHINE,'SPLASH');	
+	runner.init(MACHINE,'SPLASH');	
 	//runner.init(MACHINE,'FOR_PHOTO');
-	runner.init(MACHINE,'FOR_PHOTO_2');
+	//runner.init(MACHINE,'FOR_PHOTO_2');
 });
 
 
