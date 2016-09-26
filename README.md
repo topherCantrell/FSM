@@ -1,5 +1,6 @@
-# FSM
-Declarative Finite State Machines
+# Declarative Finite State Machines
+
+# Links
 
 LED buttons: Mouser P/N:633-15ACBKG036CF-2SJB
 
@@ -12,7 +13,7 @@ https://www.amazon.com/Tic-Tac-Autonomous-Playing-Book/dp/1594746877
 Left is the Raspberry Pi running the state machine in NodeJS. Right is the Parallax Propeller running the state machine in SPIN.
 ![](https://github.com/topherCantrell/FSM/blob/master/art/photo1.jpg)
 
-The Raspberry Pi playing the Tic Tac Toe Tome. The Pi found the winning case coded purposefully into the book.
+The Raspberry Pi playing the Tic Tac Toe Tome. The Pi found the one winning case coded purposefully into the book.
 ![](https://github.com/topherCantrell/FSM/blob/master/art/photo2.jpg)
 
 The hardware schematics and connections to the CPUs.
