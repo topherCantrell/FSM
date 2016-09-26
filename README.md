@@ -18,7 +18,7 @@ https://www.amazon.com/Tic-Tac-Autonomous-Playing-Book/dp/1594746877
 
 # Tic Tac Toe State Machine
 
-The bubbles in the diagram are the individual states. The purple function calls are made when the machine enters the state. The blue arrows show events and the target state.
+The bubbles in the diagram below are the individual states. The purple function calls are made when the machine enters the state. The blue arrows show events and the target state.
 
 ## Splash Screens
 
@@ -26,8 +26,20 @@ This part of the state machine is an attract mode. The machine shows the individ
 
 ![](https://github.com/topherCantrell/FSM/blob/master/art/TTTFSM1.png)
 
+## Pick a Game
+
+This part of the machine picks a computer player and decides who goes first.
+ 
 ![](https://github.com/topherCantrell/FSM/blob/master/art/TTTFSM2.png)
 
+## Game Play
+
+This part of the machine includes the player's input loop. You press the button and quickly release it to advance the cursor. If you hold the button down you enter the move. The cursor only stops at available cells. The machine alternates between player and CPU until there is a win or a tie.
+
 ![](https://github.com/topherCantrell/FSM/blob/master/art/TTTFSM3.png)
+
+## Game Over
+
+This part of the machine shows the winner of the game. The button flashes the color of the winner (orange for tie) until you press the button. Then the machine returns to the splash mode.
 
 ![](https://github.com/topherCantrell/FSM/blob/master/art/TTTFSM4.png)
