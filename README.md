@@ -7,13 +7,18 @@ http://www.mouser.com/ProductDetail/NKK-Switches/KP0115ACBKG036CF-2SJB
 
 https://www.amazon.com/Tic-Tac-Autonomous-Playing-Book/dp/1594746877
 
+# Hardware
 
+Left is the Raspberry Pi running the state machine in NodeJS. Right is the Parallax Propeller running the state machine in SPIN.
 ![](https://github.com/topherCantrell/FSM/blob/master/art/photo1.jpg)
 
+The Raspberry Pi playing the Tic Tac Toe Tome. The Pi found the winning case coded purposefully into the book.
 ![](https://github.com/topherCantrell/FSM/blob/master/art/photo2.jpg)
 
+The hardware schematics and connections to the CPUs.
 ![](https://github.com/topherCantrell/FSM/blob/master/art/schematic.jpg)
 
+An older version of the hardware running on the Synapse SN171 proto board.
 ![](https://github.com/topherCantrell/FSM/blob/master/art/SnapTacToe.jpg)
 
 # Tic Tac Toe State Machine
