@@ -886,31 +886,27 @@ OverWipe_HOLD
                 
         
 PLAY_HUMAN 
-        word "##!##",  FN_setButtonColor, 2, "%%", FN_advanceCursor
-        word "##T##",  0, @InputA
-        word "**"
-        
+        word "##!##",      FN_setButtonColor, 2, "%%", FN_advanceCursor
+        word "##T##",      0, @InputA
+        word "**"        
         
 InputA 
-        word "##!##",     FN_setCellAtCursor, 3, "%%", FN_drawBoard
-        word "##T##",     T_inputDown, @InputB
-        word "##down##",  @InputC
-        word "**"
-        
+        word "##!##",      FN_setCellAtCursor, 3, "%%", FN_drawBoard
+        word "##T##",      T_inputDown, @InputB
+        word "##down##",   @InputC
+        word "**"        
         
 InputB 
-        word "##!##",     FN_setCellAtCursor, 0, "%%", FN_drawBoard
-        word "##T##",     T_inputDown, @InputA
-        word "##down##",  @InputC
-        word "**"
-        
+        word "##!##",      FN_setCellAtCursor, 0, "%%", FN_drawBoard
+        word "##T##",      T_inputDown, @InputA
+        word "##down##",   @InputC
+        word "**"        
         
 InputC 
-        word "##!##",     FN_setCellAtCursor, 3, "%%", FN_drawBoard
-        word "##T##",     T_inputHeld, @HMove
-        word "##up##",  @PLAY_HUMAN, FN_setCellAtCursor, 0
-        word "**"
-        
+        word "##!##",      FN_setCellAtCursor, 3, "%%", FN_drawBoard
+        word "##T##",      T_inputHeld, @HMove
+        word "##up##",     @PLAY_HUMAN, FN_setCellAtCursor, 0
+        word "**"        
                         
 HMove 
         word "##!##",      FN_setCellAtCursor, 2, "%%",  FN_drawBoard, "%%", FN_getGameState
