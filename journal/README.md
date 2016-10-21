@@ -1,5 +1,18 @@
 # Journal
 
+## 10/21/2016
+
+Moving to the Pi3:
+
+Here is how to install node: https://learn.adafruit.com/node-embedded-development/installing-node-dot-js
+
+You must open a new terminal after installing to get the right path.
+
+In project directory:
+npm install rpi-gpio
+npm install p2c-bus
+
+
 ## 9/11/2016
 
 I made a light tent and took some good pics of the project. I cleaned up the word-art schematic.

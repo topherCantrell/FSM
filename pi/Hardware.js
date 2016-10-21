@@ -1,7 +1,9 @@
 
 var SWITCH_PIN = 7;
-var GREEN_PIN = 11;
-var RED_PIN = 13;
+var GREEN_PIN  = 11;
+var RED_PIN    = 13;
+
+var ADDRESS    = 0x72; // I2C address
 
 var gpio = require('rpi-gpio');
 
@@ -14,10 +16,11 @@ exports.drawImage = drawImage;
 
 function init(buttonListener, cb) {
 
-	i2c1.writeByteSync(0x71,0x21,0);
-	i2c1.writeByteSync(0x71,0xEF,0);
-	i2c1.writeByteSync(0x71,0x81,0);
-	drawImage([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
+	i2c1.sendByteSync(ADDRESS,0x21); // 0010_xxxs s=1      (turn on system oscillator)
+	i2c1.sendByteSync(ADDRESS,0xEF); // 1110_dddd d=15     (set brightness to full)
+	i2c1.sendByteSync(ADDRESS,0x81); // 1000_xbbd b=0, d=1 (blinking off, display on)
+	
+	drawImage([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]); // clear the display
 	
 	gpio.setup(GREEN_PIN, gpio.DIR_OUT, function(err) {
 		gpio.setup(RED_PIN, gpio.DIR_OUT, function(err) {				
@@ -50,8 +53,8 @@ function setButtonColor(color) {
 	}
 }
 
-function drawImage(image) {
-	for (var x=0;x<16;++x) {
-		i2c1.writeByteSync(0x71,x,image[x]);
-	}
+function drawImage(image) {	
+	
+	i2c1.writeI2cBlockSync(ADDRESS,0,16,new Buffer(image));
+	
 }
