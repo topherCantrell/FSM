@@ -641,39 +641,6 @@ WipeB_HOLD
         word "##down##",  @PICKS
         word "**"
 
-
-WIN_cpu 
-        word "##!##",  FN_drawBoard, "%%", FN_setButtonColor, 1
-        word "##T##",  T_winOn, @WIN_cpu2
-        word "**"       
-        
-WIN_cpu2 
-        word "##!##",  FN_drawImage, IM_BOARD, "%%", FN_setButtonColor,0
-        word "##T##",  T_winOff, @WIN_cpu
-        word "**"
-                
-        
-WIN_human 
-        word "##!##",  FN_drawBoard, "%%", FN_setButtonColor, 2
-        word "##T##",  T_winOn, @WIN_human2
-        word "**"               
-        
-WIN_human2 
-        word "##!##",  FN_drawImage, IM_BOARD, "%%", FN_setButtonColor,0
-        word "##T##",  T_winOff, @WIN_human
-        word "**"
-                
-        
-WIN_tie 
-        word "##!##",  FN_drawBoard, "%%", FN_setButtonColor, 3
-        word "##T##",  T_winOn, @WIN_tie2       
-        word "**"       
-        
-WIN_tie2 
-        word "##!##",  FN_drawImage, IM_BOARD, "%%", FN_setButtonColor,0
-        word "##T##",  T_winOff, @WIN_tie
-        word "**"
-
 PICKS 
         word "##!##",       FN_setButtonColor,0,"%%",FN_newGame, "%%",FN_pickCPU
         word "##random##",  @Opp_RANDOM
@@ -905,7 +872,12 @@ InputB
 InputC 
         word "##!##",      FN_setCellAtCursor, 3, "%%", FN_drawBoard
         word "##T##",      T_inputHeld, @HMove
-        word "##up##",     @PLAY_HUMAN, FN_setCellAtCursor, 0
+        word "##up##",     @InputD
+        word "**"
+
+InputD 
+        word "##!##",      FN_setCellAtCursor, 0
+        word "##T##",      0, @PLAY_HUMAN        
         word "**"        
                         
 HMove 

@@ -100,9 +100,9 @@ var TIMING = {
 		cpuOff        :  500
 }
 
-var MACHINE = {	
+var MACHINE = {			
 		
-		
+	// Freeze the display for a photo
 	FOR_PHOTO : {
 		ENTER : ['newGame', 'and', 'setButtonColor',2, 
 		         'and', 'advanceCursor', 
@@ -123,6 +123,7 @@ var MACHINE = {
 		         'and', 'drawBoard']
 	},
 	
+	// Freeze the display for a photo
 	FOR_PHOTO_2: {
 		ENTER : ['newGame', 'and', 'setButtonColor',2, 
 		         'and', 'advanceCursor', 
@@ -529,7 +530,12 @@ var MACHINE = {
 	InputC : {
 		ENTER : ['setCellAtCursor', 3, 'and', 'drawBoard'],
 		TIMEOUT : [TIMING.inputHeld, 'HMove'],
-	    up : ['PLAY_HUMAN', 'setCellAtCursor', 0]
+	    up : 'InputD'
+	},
+	
+	InputD : {
+		ENTER : ['setCellAtCursor', 0],
+		TIMEOUT : [0, 'PLAY_HUMAN'],
 	},
 			
 	HMove : {
@@ -539,7 +545,6 @@ var MACHINE = {
 		play :  'PLAY_CPU',
 		tie :   'OVER_TIE'
 	},
-	
 	
 		
 	PLAY_CPU : {
