@@ -331,36 +331,7 @@ var MACHINE = {
 		TIMEOUT : [TIMING.wipeHold, 'SPLASH'],
         down : 'PICKS'
 	},
-	
-	// ------------------------------------------------
-	
-	WIN_cpu : {
-		ENTER : ['drawBoard', 'and', 'setButtonColor', 1],
-		TIMEOUT : [TIMING.winOn, 'WIN_cpu2']		
-	},
-	WIN_cpu2 : {
-		ENTER : ['drawImage', IM_BOARD, 'and', 'setButtonColor',0],
-		TIMEOUT : [TIMING.winOff, 'WIN_cpu']
-	},	
-	
-	WIN_human : {
-		ENTER : ['drawBoard', 'and', 'setButtonColor', 2],
-		TIMEOUT : [TIMING.winOn, 'WIN_human2']		
-	},
-	WIN_human2 : {
-		ENTER : ['drawImage', IM_BOARD, 'and', 'setButtonColor',0],
-		TIMEOUT : [TIMING.winOff, 'WIN_human']
-	},	
-	
-	WIN_tie : {
-		ENTER : ['drawBoard', 'and', 'setButtonColor', 3],
-		TIMEOUT : [TIMING.winOn, 'WIN_tie2']		
-	},
-	WIN_tie2 : {
-		ENTER : ['drawImage', IM_BOARD, 'and', 'setButtonColor',0],
-		TIMEOUT : [TIMING.winOff, 'WIN_tie']
-	},	
-	
+			
 	// ------------------------------------------------
 	
 	PICKS : {

@@ -17,7 +17,7 @@ The Raspberry Pi playing the Tic Tac Toe Tome. The Pi found the one winning case
 ![](https://github.com/topherCantrell/FSM/blob/master/art/photo2.jpg)
 
 The hardware schematics and connections to the CPUs.
-![](https://github.com/topherCantrell/FSM/blob/master/art/schematic.jpg)
+![](https://github.com/topherCantrell/FSM/blob/master/art/figure1.jpg)
 
 An older version of the hardware running on the Synapse SN171 proto board.
 ![](https://github.com/topherCantrell/FSM/blob/master/art/SnapTacToe.jpg)
