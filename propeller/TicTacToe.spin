@@ -849,8 +849,8 @@ OverWipe_HOLD
         word "##!##",  FN_drawImage,@IM_SOLID_0
         word "##T##",  T_wipeHold, @SPLASH   
         word "**"     
-        
-                
+                                               
+
         
 PLAY_HUMAN 
         word "##!##",      FN_setButtonColor, 2, "%%", FN_advanceCursor

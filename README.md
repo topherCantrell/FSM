@@ -1,12 +1,22 @@
 # Declarative Finite State Machines
 
 # Links
+8x8 LED Display:
+http://www.adafruit.com/product/902
 
-LED buttons: Mouser P/N:633-15ACBKG036CF-2SJB
+LED Button (Mouser P/N: 633-15ACBKG036CF-2SJB):
+http://www.mouser.com/search/ProductDetail.aspx?R=0virtualkey0virtualkeyKP0115ACBKG036CF-2SJB
 
-http://www.mouser.com/ProductDetail/NKK-Switches/KP0115ACBKG036CF-2SJB
+Full Tic Tac Toe State Machine Diagram:
+https://github.com/topherCantrell/StateMachines
 
-https://www.amazon.com/Tic-Tac-Autonomous-Playing-Book/dp/1594746877
+TODO: youtube video of Raspberry Pi version (maybe both?) Include screen shots of github and put github link in the comments.
+
+HT16K133 LED Matrix Backpack Driver:
+http://obex.parallax.com/object/747
+
+Tic Tac Tome:
+http://www.amazon.com/Tic-Tac-Tome-Autonomous-Playing/dp/1594746877
 
 # Hardware
 
