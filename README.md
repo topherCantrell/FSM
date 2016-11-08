@@ -12,10 +12,10 @@ https://github.com/topherCantrell/StateMachines
 
 TODO: youtube video of Raspberry Pi version (maybe both?) Include screen shots of github and put github link in the comments.
 
-HT16K133 LED Matrix Backpack Driver:
+HT16K133 LED Matrix Backpack Driver:<br>
 http://obex.parallax.com/object/747
 
-Tic Tac Tome:
+Tic Tac Tome:<br>
 http://www.amazon.com/Tic-Tac-Tome-Autonomous-Playing/dp/1594746877
 
 # Hardware
