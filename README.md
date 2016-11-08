@@ -4,7 +4,7 @@
 8x8 LED Display:<br>
 http://www.adafruit.com/product/902
 
-LED Button (Mouser P/N: 633-15ACBKG036CF-2SJB):
+LED Button (Mouser P/N: 633-15ACBKG036CF-2SJB):<br>
 http://www.mouser.com/search/ProductDetail.aspx?R=0virtualkey0virtualkeyKP0115ACBKG036CF-2SJB
 
 Full Tic Tac Toe State Machine Diagram:<br>
