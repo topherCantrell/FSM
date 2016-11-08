@@ -1,16 +1,14 @@
 # Declarative Finite State Machines
 
 # Links
-8x8 LED Display:
+8x8 LED Display:<br>
 http://www.adafruit.com/product/902
 
 LED Button (Mouser P/N: 633-15ACBKG036CF-2SJB):
 http://www.mouser.com/search/ProductDetail.aspx?R=0virtualkey0virtualkeyKP0115ACBKG036CF-2SJB
 
-Full Tic Tac Toe State Machine Diagram:
+Full Tic Tac Toe State Machine Diagram:<br>
 https://github.com/topherCantrell/StateMachines
-
-TODO: youtube video of Raspberry Pi version (maybe both?) Include screen shots of github and put github link in the comments.
 
 HT16K133 LED Matrix Backpack Driver:<br>
 http://obex.parallax.com/object/747
@@ -18,9 +16,12 @@ http://obex.parallax.com/object/747
 Tic Tac Tome:<br>
 http://www.amazon.com/Tic-Tac-Tome-Autonomous-Playing/dp/1594746877
 
+Installing node.js on Raspberry Pi:<br>
+https://learn.adafruit.com/node-embedded-development/installing-node-dot-js
+
 # Hardware
 
-Left is the Raspberry Pi running the state machine in NodeJS. Right is the Parallax Propeller running the state machine in SPIN.
+Here is the tic-tac-toe state machine in action. The Raspberry Pi is on the left running the state machine in NodeJS (JavaScript). The Parallax Propeller is on the right running the state machine in SPIN. Both platforms use the same hardware. The left button has a wooden sleeve I built for stability.
 ![](https://github.com/topherCantrell/FSM/blob/master/art/photo1.jpg)
 
 The Raspberry Pi playing the Tic Tac Toe Tome. The Pi found the one winning case coded purposefully into the book.
