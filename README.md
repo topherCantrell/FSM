@@ -7,9 +7,6 @@ http://www.adafruit.com/product/902
 LED Button (Mouser P/N: 633-15ACBKG036CF-2SJB):<br>
 http://www.mouser.com/search/ProductDetail.aspx?R=0virtualkey0virtualkeyKP0115ACBKG036CF-2SJB
 
-Full Tic Tac Toe State Machine Diagram:<br>
-https://github.com/topherCantrell/StateMachines
-
 HT16K133 LED Matrix Backpack Driver:<br>
 http://obex.parallax.com/object/747
 
