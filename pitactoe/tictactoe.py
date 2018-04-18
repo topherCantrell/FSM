@@ -1,8 +1,11 @@
 from TopherDisplay import TopherDisplay
+from LEDButton import LEDButton
 
 display = TopherDisplay(address=0x72)
 display.begin()
 display.clear()
+
+button = LEDButton()
 
 i_ticT = ["GGG",
           ".G.",
@@ -81,3 +84,7 @@ display.draw_v_line(6,1)
 #display.draw_ascii_image(i_ticT,2,4)
 
 display.write_display()
+
+button.set_color(0)
+
+print(button.get_button())
