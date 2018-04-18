@@ -10,13 +10,13 @@ GREEN = 1
 RED = 2
 YELLOW = 3
 
-class TopherDisplay(BicolorMatrix8x8.BicolorMatrix8x8):
+class Display(BicolorMatrix8x8.BicolorMatrix8x8):
     
     def __init__(self, **kwargs):
         """Initialize display.  All arguments will be passed to the HT16K33 class
         initializer, including optional I2C address and bus number parameters.
         """
-        super(TopherDisplay, self).__init__(**kwargs)
+        super(Display, self).__init__(**kwargs)
         
     def set_pixel(self, x, y, value):
         """Set pixel at position x, y to the given value.  X and Y should be values

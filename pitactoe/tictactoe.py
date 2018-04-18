@@ -1,7 +1,7 @@
-from TopherDisplay import TopherDisplay
+from Display import Display
 from LEDButton import LEDButton
 
-display = TopherDisplay(address=0x72)
+display = Display(address=0x72)
 display.begin()
 display.clear()
 
