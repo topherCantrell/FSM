@@ -70,6 +70,24 @@ i_RND = ['...YY...',
          '...YY...',
          '...YY...']
 
+def set_cell(cell,color):
+    pass
+
+def get_cat_move():
+    pass
+
+def get_rnd_move():
+    pass
+
+def get_one_move():
+    pass
+
+def show_computer_move(cell):
+    pass
+
+def get_human_move():
+    pass
+
 """
 def draw_h_line(display,x,c):
     for y in range(8):
