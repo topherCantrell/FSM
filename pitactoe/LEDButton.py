@@ -1,10 +1,16 @@
 import RPi.GPIO as GPIO
+import time
 
 PIN_GREEN = 11
 PIN_RED = 13
 PIN_SWITCH = 15
 
 class LEDButton:
+    
+    COLOR_OFF = 0
+    COLOR_GREEN = 1
+    COLOR_RED = 2
+    COLOR_YELLOW = 3
     
     def __init__(self):
         GPIO.setwarnings(False)
@@ -31,4 +37,12 @@ class LEDButton:
             
     def get_button(self):
         return GPIO.input(PIN_SWITCH)
+    
+    def wait_for_button_state(self,state,timeout_ms):
+        # Return true if state was found
+        # Return false if timeout
+        for h in range(int(timeout_ms/10.0)):
+            if self.get_button() == state:
+                return True
+            time.sleep(0.01)
         

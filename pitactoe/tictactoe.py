@@ -1,9 +1,9 @@
 from Display import Display
 from LEDButton import LEDButton
 
+import time
+
 display = Display(address=0x72)
-display.begin()
-display.clear()
 
 button = LEDButton()
 
@@ -88,48 +88,95 @@ def show_computer_move(cell):
 def get_human_move():
     pass
 
-"""
-def draw_h_line(display,x,c):
-    for y in range(8):
-        display.set_pixel(x,y,c)
-        
-def draw_v_line(display,y,c):
-    for x in range(8):
-        display.set_pixel(x,7-y,c)
+def wipe_right():
+    for i in range(9):
+        display.draw_v_line(i-1,0)
+        display.draw_v_line(i,3)
+        display.write_display()
+        if button.wait_for_button_state(True,100):
+            return True
+    return False
 
-def draw_ascii_image(display, img, xo, yo):
-    for y in range(len(img)):
-        for x in range(len(img[y])):
-            c = img[y][x]
-            v = 0
-            if c=='R':
-                v = 2
-            elif c=='G':
-                v = 1
-            elif c=='Y':
-                v = 3
-            display.set_pixel(y+yo,7-(x+xo),v)
+def wipe_left():
+    for i in range(7,-2,-1):
+        display.draw_v_line(i+1,0)
+        display.draw_v_line(i,3)
+        display.write_display()
+        if button.wait_for_button_state(True,100):
+            return True
+    return False
 
-draw_ascii_image(display,i_ticT,0,0)
-draw_ascii_image(display,i_ticI,4,0)
-draw_ascii_image(display,i_ticC,3,5)
-     
-draw_ascii_image(display,i_tacT,0,0)
-draw_ascii_image(display,i_tacA,4,0)
-draw_ascii_image(display,i_tacC,3,5)
-   
-draw_ascii_image(display,i_toeT,1,0)
-draw_ascii_image(display,i_toeO,5,0)
-draw_ascii_image(display,i_toeE,3,3)
-"""
+def wipe_down():
+    for i in range(9):
+        display.draw_h_line(i-1,0)
+        display.draw_h_line(i,3)
+        display.write_display()
+        if button.wait_for_button_state(True,100):
+            return True
+    return False
 
-display.draw_h_line(4,2)
-display.draw_v_line(6,1)
+def wipe_board(full):
+    for i in range(4):
+        display.draw_h_line(i-1,0)
+        display.draw_h_line(7-i+1,0)
+        display.draw_v_line(i-1,0)
+        display.draw_v_line(7-i+1,0)
+        display.draw_h_line(i,3)
+        display.draw_h_line(7-i,3)
+        display.draw_v_line(i,3)
+        display.draw_v_line(7-i,3)
+        display.write_display()
+        time.sleep(.10)
+    r = 2
+    if full:
+        r = -1
+    for i in range(3,r,-1):
+        display.draw_h_line(i,0)
+        display.draw_h_line(7-i,0)
+        display.draw_v_line(i,0)
+        display.draw_v_line(7-i,0)
+        display.draw_h_line(i-1,3)
+        display.draw_h_line(7-i+1,3)
+        display.draw_v_line(i-1,3)
+        display.draw_v_line(7-i+1,3)
+        display.write_display()
+        time.sleep(.10)  
 
-#display.draw_ascii_image(i_ticT,2,4)
+def splash_three_letters(a,b,c):
+    display.draw_ascii_image(a[0],a[1],a[2])
+    display.write_display()
+    if button.wait_for_button_state(True,500):
+        return True    
+    display.draw_ascii_image(b[0],b[1],b[2])
+    display.write_display()
+    if button.wait_for_button_state(True,500):
+        return True
+    display.draw_ascii_image(c[0],c[1],c[2])
+    display.write_display()
+    if button.wait_for_button_state(True,1000):
+        return True    
+    return False
 
+def splash_mode():
+    display.clear()
+    button.set_color(LEDButton.COLOR_GREEN)
+    while True:        
+        if splash_three_letters((i_ticT,0,0),(i_ticI,4,0),(i_ticC,3,5)):
+            return
+        if wipe_right():
+            return True
+        if splash_three_letters((i_tacT,0,0),(i_tacA,4,0),(i_tacC,3,5)):
+            return
+        if wipe_left():
+            return True
+        if splash_three_letters((i_toeT,1,0),(i_toeO,5,0),(i_toeE,3,3)):
+            return
+        if wipe_down():
+            return True
+
+splash_mode()
+
+button.set_color(LEDButton.COLOR_OFF)
+display.clear()
 display.write_display()
 
-button.set_color(0)
-
-print(button.get_button())
