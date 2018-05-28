@@ -191,23 +191,7 @@ def show_opponent():
         else:
             display.draw_ascii_image(i_CAT)
         display.write_display()
-        time.sleep(0.2)       
-        
-def show_status(winner):
-    pass
-        
-def get_cat_move():
-    return get_rnd_move()
-
-def get_one_move():
-    return get_rnd_move()
-
-def get_rnd_move():
-    while True:
-        x = random.randint(0,2)
-        y = random.randint(0,2)
-        if board[y][x]==0:
-            return (x,y)
+        time.sleep(0.2)  
         
 def show_computer_move(x,y):
     for i in range(3):
@@ -219,6 +203,7 @@ def show_computer_move(x,y):
         time.sleep(0.5)    
 
 def get_computer_move():
+    button.set_color(2)
     x,y = get_rnd_move()
     show_computer_move(x,y)
     board[y][x] = 2
@@ -247,6 +232,7 @@ def advance_cursor():
             break
     
 def get_human_move():    
+    button.set_color(1)
     while True:
         advance_cursor()
         while True:        
@@ -275,35 +261,86 @@ def get_human_move():
                 draw_board()
                 return            
 
-splash_mode()
-wipe_board(True)
+def show_winner(winner):
+    while button.get_button()==True:
+        pass
+    button.set_color(winner)
+    while True:
+        display.clear()
+        display.write_display()
+        if button.wait_for_button_state(True,0.25):
+            while button.get_button()==True:
+                pass
+            wipe_board(True)
+            return
+        draw_board()
+        if button.wait_for_button_state(True,0.25):
+            while button.get_button()==True:
+                pass 
+            wipe_board(True)
+            return       
 
-opponent = random.randint(0,2)
-show_opponent()
+def check_status():
+    for i in range(3):
+        if board[i][0]!=0 and board[i][0]==board[i][1] and board[i][0]==board[i][2]:
+            return board[i][0]
+        if board[0][i]!=0 and board[0][i]==board[1][i] and board[0][i]==board[2][i]:
+            return board[0][i]
+        if board[0][0]!=0 and board[0][0]==board[1][1] and board[0][0]==board[2][2]:
+            return board[0][0]
+        if board[0][2]!=0 and board[0][2]==board[1][1] and board[0][2]==board[2][0]:
+            return board[0][2]
+    for y in range(3):
+        for x in range(3):
+            if board[y][x]==0:
+                return 0
+    return 3
 
-time.sleep(0.75)
-wipe_board(False)
+def get_cat_move():
+    # TODO
+    return get_rnd_move()
 
-# pick a start player
+def get_one_move():
+    # TODO
+    return get_rnd_move()
 
-# loop here
+def get_rnd_move():
+    while True:
+        x = random.randint(0,2)
+        y = random.randint(0,2)
+        if board[y][x]==0:
+            return (x,y)
+        
 while True:
-    get_human_move()
-    get_computer_move()
-
-# Check Status
-# if win - show status and return to top
-
-# Get computer move
-# Show move
-# Make move
-
-# Check Status
-# if win - show status and return to top
-
-
-'''
-button.set_color(0)
-display.clear()
-display.write_display()
-'''
+    splash_mode()
+    wipe_board(True)
+    
+    opponent = random.randint(0,2)
+    show_opponent()    
+    
+    time.sleep(0.75)
+    wipe_board(False)
+    
+    board = [ [0,0,0],
+              [0,0,0],
+              [0,0,0] ]
+    
+    cursor_x = 0
+    cursor_y = 0
+    
+    skip_human = (random.randint(0,1)==1)
+        
+    # loop here
+    while True:
+        if not skip_human:
+            get_human_move()
+            s = check_status()
+            if s!=0:
+                show_winner(s)
+                break
+        skip_human = False
+        get_computer_move()
+        s = check_status()
+        if s!=0:
+            show_winner(s)
+            break
