@@ -2,10 +2,19 @@ from Display import Display
 from LEDButton import LEDButton
 
 import time
+import random
 
 display = Display(address=0x72)
-
 button = LEDButton()
+
+cursor_x = 2
+cursor_y = 2
+
+opponent = 0
+
+board = [ [0,0,0],
+          [0,0,0],
+          [0,0,0] ]
 
 i_ticT = ["GGG",
           ".G.",
@@ -70,30 +79,26 @@ i_RND = ['..YGR...',
          '...G....',
          '...R....']
 
-def set_cell(cell,color):
-    pass
-
-def get_cat_move():
-    pass
-
-def get_rnd_move():
-    pass
-
-def get_one_move():
-    pass
-
-def show_computer_move(cell):
-    pass
-
-def get_human_move():
-    pass
+def draw_board():
+    display.clear()
+    display.draw_h_line(2,3)
+    display.draw_h_line(5,3)
+    display.draw_v_line(2,3)
+    display.draw_v_line(5,3)
+    for y in range(3):
+        for x in range(3):
+            display.set_pixel(x*3,y*3,board[y][x])
+            display.set_pixel(x*3+1,y*3,board[y][x])
+            display.set_pixel(x*3,y*3+1,board[y][x])
+            display.set_pixel(x*3+1,y*3+1,board[y][x])
+    display.write_display()
 
 def wipe_right():
     for i in range(9):
         display.draw_v_line(i-1,0)
         display.draw_v_line(i,3)
         display.write_display()
-        if button.wait_for_button_state(True,100):
+        if button.wait_for_button_state(True,0.1):
             return True
     return False
 
@@ -102,7 +107,7 @@ def wipe_left():
         display.draw_v_line(i+1,0)
         display.draw_v_line(i,3)
         display.write_display()
-        if button.wait_for_button_state(True,100):
+        if button.wait_for_button_state(True,0.1):
             return True
     return False
 
@@ -111,7 +116,7 @@ def wipe_down():
         display.draw_h_line(i-1,0)
         display.draw_h_line(i,3)
         display.write_display()
-        if button.wait_for_button_state(True,100):
+        if button.wait_for_button_state(True,0.1):
             return True
     return False
 
@@ -145,15 +150,15 @@ def wipe_board(full):
 def splash_three_letters(a,b,c):
     display.draw_ascii_image(a[0],a[1],a[2])
     display.write_display()
-    if button.wait_for_button_state(True,500):
+    if button.wait_for_button_state(True,0.5):
         return True    
     display.draw_ascii_image(b[0],b[1],b[2])
     display.write_display()
-    if button.wait_for_button_state(True,500):
+    if button.wait_for_button_state(True,0.5):
         return True
     display.draw_ascii_image(c[0],c[1],c[2])
     display.write_display()
-    if button.wait_for_button_state(True,1000):
+    if button.wait_for_button_state(True,1):
         return True    
     return False
 
@@ -173,10 +178,132 @@ def splash_mode():
             return
         if wipe_down():
             return True
+        
+def show_opponent():
+    for i in range(5):
+        display.clear()
+        display.write_display()
+        time.sleep(0.2)        
+        if opponent==0:
+            display.draw_ascii_image(i_RND)
+        elif opponent==1:
+            display.draw_ascii_image(i_ONE)
+        else:
+            display.draw_ascii_image(i_CAT)
+        display.write_display()
+        time.sleep(0.2)       
+        
+def show_status(winner):
+    pass
+        
+def get_cat_move():
+    return get_rnd_move()
+
+def get_one_move():
+    return get_rnd_move()
+
+def get_rnd_move():
+    while True:
+        x = random.randint(0,2)
+        y = random.randint(0,2)
+        if board[y][x]==0:
+            return (x,y)
+        
+def show_computer_move(x,y):
+    for i in range(3):
+        board[y][x] = 3
+        draw_board()
+        time.sleep(0.5)
+        board[y][x] = 2
+        draw_board()    
+        time.sleep(0.5)    
+
+def get_computer_move():
+    x,y = get_rnd_move()
+    show_computer_move(x,y)
+    board[y][x] = 2
+    
+def get_cursor_input():
+    if button.wait_for_button_state(True,0.5):
+        board[cursor_y][cursor_x] = 3
+        draw_board()
+        if button.wait_for_button_state(False,0.5):
+            return 1 # Advance cursor
+        else:
+            return 2 # Enter move
+    else:
+        return 0 # Nothing
+    
+def advance_cursor():
+    global cursor_x,cursor_y
+    while True:
+        cursor_x = cursor_x + 1
+        if cursor_x == 3:
+            cursor_x = 0
+            cursor_y = cursor_y + 1
+            if cursor_y == 3:
+                cursor_y = 0
+        if board[cursor_y][cursor_x] == 0:
+            break
+    
+def get_human_move():    
+    while True:
+        advance_cursor()
+        while True:        
+            
+            board[cursor_y][cursor_x] = 3
+            draw_board()
+            m = get_cursor_input()
+            if m==1:
+                board[cursor_y][cursor_x] = 0
+                draw_board()
+                break # advance the cursor
+            elif m==2:
+                board[cursor_y][cursor_x] = 1
+                draw_board()
+                return
+            
+            board[cursor_y][cursor_x] = 0
+            draw_board()
+            m = get_cursor_input()
+            if m==1:
+                board[cursor_y][cursor_x] = 0
+                draw_board()
+                break # advance the cursor
+            elif m==2:
+                board[cursor_y][cursor_x] = 1
+                draw_board()
+                return            
 
 splash_mode()
+wipe_board(True)
 
-button.set_color(LEDButton.COLOR_OFF)
+opponent = random.randint(0,2)
+show_opponent()
+
+time.sleep(0.75)
+wipe_board(False)
+
+# pick a start player
+
+# loop here
+while True:
+    get_human_move()
+    get_computer_move()
+
+# Check Status
+# if win - show status and return to top
+
+# Get computer move
+# Show move
+# Make move
+
+# Check Status
+# if win - show status and return to top
+
+
+'''
+button.set_color(0)
 display.clear()
 display.write_display()
-
+'''

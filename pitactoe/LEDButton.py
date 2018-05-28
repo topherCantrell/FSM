@@ -38,10 +38,10 @@ class LEDButton:
     def get_button(self):
         return GPIO.input(PIN_SWITCH)
     
-    def wait_for_button_state(self,state,timeout_ms):
+    def wait_for_button_state(self,state,timeout_s):
         # Return true if state was found
         # Return false if timeout
-        for h in range(int(timeout_ms/10.0)):
+        for h in range(int(timeout_s*100.0)):
             if self.get_button() == state:
                 return True
             time.sleep(0.01)

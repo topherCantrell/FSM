@@ -39,7 +39,7 @@ class Display(BicolorMatrix8x8.BicolorMatrix8x8):
         # Set red LED based on 2nd bit in value.
         self.set_led(y * 16 + x + 8, 1 if value & Display.COLOR_RED > 0 else 0)
         
-    def draw_ascii_image(self, img, xo, yo):
+    def draw_ascii_image(self, img, xo=0, yo=0):
         for y in range(len(img)):
             for x in range(len(img[y])):
                 c = img[y][x]
