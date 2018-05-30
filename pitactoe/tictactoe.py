@@ -10,7 +10,7 @@ button = LEDButton()
 cursor_x = 2
 cursor_y = 2
 
-opponent = 0
+opponent = 2
 
 wins = (
           # Horizontals
@@ -218,7 +218,12 @@ def show_computer_move(x,y):
 
 def get_computer_move():
     button.set_color(2)
-    x,y = get_rnd_move()
+    if opponent==0:
+        x,y = get_rnd_move()
+    elif opponent==1:
+        x,y = get_one_move()
+    else:
+        x,y = get_cat_move()
     show_computer_move(x,y)
     board[y][x] = 2
     
@@ -294,28 +299,85 @@ def show_winner(winner):
             wipe_board(True)
             return       
 
-def check_status():
-    for i in range(3):
-        if board[i][0]!=0 and board[i][0]==board[i][1] and board[i][0]==board[i][2]:
-            return board[i][0]
-        if board[0][i]!=0 and board[0][i]==board[1][i] and board[0][i]==board[2][i]:
-            return board[0][i]
-        if board[0][0]!=0 and board[0][0]==board[1][1] and board[0][0]==board[2][2]:
-            return board[0][0]
-        if board[0][2]!=0 and board[0][2]==board[1][1] and board[0][2]==board[2][0]:
-            return board[0][2]
+def check_status():    
+    for w in wins:
+        if count_tokens(w,1)==3:
+            return 1
+        elif count_tokens(w,2)==3:
+            return 2    
+    if count_free_spaces() == 0:
+        return 3
+    return 0
+
+def count_free_spaces():
+    ret = 0
     for y in range(3):
         for x in range(3):
             if board[y][x]==0:
-                return 0
-    return 3
+                ret = ret + 1
+    return ret            
+
+def count_tokens(w,tok):
+    ret = 0
+    for c in w:
+        if board[c[1]][c[0]] == tok:
+            ret = ret + 1
+    return ret
 
 def get_cat_move():
-    # TODO
+    
+    # Win or block has priority
+    m = find_win_or_block()
+    if m != None:
+        return m
+    
+    # Now for the CAT logic
+    c = count_free_spaces()
+    if c==9: # computer gets first move -- take upper left
+        return (0,0) # Take upper left
+    if c==7: # computer gets third move -- take a corner
+        if board[2][2]==0:
+            return (2,2)       
+        else:
+            return (0,2)
+        
+    if c==8: # human went first -- we'll take middle or upper left 
+        if board[1][1]==0:
+            return (1,1)
+        else:
+            return (0,0)
+        
+    if c==6: # human in center -- take a non corner else take opposite corner or other corner
+        if board[1][1]==1: # Human is in center ...
+            return (0,1)   # ... take non-corner
+        if board[2][2]==1: # Human is in opposite corner ...
+            return (2,0)   # ... take another corner 
+        return (2,2)       # Opposite corner is open -- take it
+    
+    # No other ideas ... take a random cell.
+    # We could do better, but eh
+    
     return get_rnd_move()
 
+def find_win_or_block():
+    for w in wins:
+        if count_tokens(w,2)==2 and count_tokens(w,0)==1:
+            # Winning move
+            for c in w:
+                if board[c[1]][c[0]]==0:
+                    return c            
+    for w in wins:
+        if count_tokens(w,1)==2 and count_tokens(w,0)==1:
+            # Blocking move
+            for c in w:
+                if board[c[1]][c[0]]==0:
+                    return c 
+    return None
+
 def get_one_move():
-    # TODO
+    m = find_win_or_block()
+    if m != None:
+        return m
     return get_rnd_move()
 
 def get_rnd_move():
@@ -329,18 +391,21 @@ while True:
     splash_mode()
     wipe_board(True)
     
-    opponent = random.randint(0,2)
+    #opponent = random.randint(0,2)
+    opponent = opponent+1
+    if opponent == 3:
+        opponent = 0
     show_opponent()    
     
     time.sleep(0.75)
     wipe_board(False)
     
     board = [ [0,0,0],
-              [0,0,0],
+              [0,0,0], 
               [0,0,0] ]
     
-    cursor_x = 0
-    cursor_y = 0
+    cursor_x = 2
+    cursor_y = 2
     
     skip_human = (random.randint(0,1)==1)
         
