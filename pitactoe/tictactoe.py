@@ -208,13 +208,13 @@ def show_opponent():
         time.sleep(0.2)  
         
 def show_computer_move(x,y):
-    for i in range(3):
+    for i in range(2):
         board[y][x] = 3
         draw_board()
-        time.sleep(0.5)
+        time.sleep(0.3)
         board[y][x] = 2
         draw_board()    
-        time.sleep(0.5)    
+        time.sleep(0.3)    
 
 def get_computer_move():
     button.set_color(2)
@@ -282,9 +282,9 @@ def get_human_move():
 
 def show_winner(winner):
     while button.get_button()==True:
-        pass
-    button.set_color(winner)
+        pass    
     while True:
+        button.set_color(0)
         display.clear()
         display.write_display()
         if button.wait_for_button_state(True,0.25):
@@ -292,6 +292,7 @@ def show_winner(winner):
                 pass
             wipe_board(True)
             return
+        button.set_color(winner)
         draw_board()
         if button.wait_for_button_state(True,0.25):
             while button.get_button()==True:
@@ -386,6 +387,13 @@ def get_rnd_move():
         y = random.randint(0,2)
         if board[y][x]==0:
             return (x,y)
+
+display.clear()
+display.write_display()
+
+while button.get_button() != True:
+    pass
+time.sleep(1)
         
 while True:
     splash_mode()
