@@ -6,7 +6,7 @@ https://youtu.be/q3QH9htYY7w?t=445
 
 ![](https://github.com/topherCantrell/FSM/blob/master/art/seen.jpg)
 
-### Published in Circuit Cellar, June 2018
+### Published in Circuit Cellar, July 2017
 
 # Links
 8x8 LED Display:<br>
