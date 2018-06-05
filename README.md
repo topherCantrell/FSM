@@ -1,10 +1,8 @@
 # Declarative Finite State Machines
 
-### As seen on Adafruit Show and Tell
+As seen on Adafruit Show and Tell: https://youtu.be/q3QH9htYY7w?t=445
 
 ![](https://github.com/topherCantrell/FSM/blob/master/art/seen.jpg)
-
-https://youtu.be/q3QH9htYY7w?t=445
 
 # Circuit Cellar Source ZIP
 
