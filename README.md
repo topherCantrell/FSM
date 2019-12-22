@@ -1,12 +1,16 @@
 # Declarative Finite State Machines
 
-### As seen on Adafruit Show and Tell 
-
+### As seen on Adafruit Show and Tell
+[![](art/adafruit.jpg)](https://www.adafruit.com/) <br>
 https://youtu.be/q3QH9htYY7w?t=445
 
-![](art/seen.jpg)
+### As seen on Youtube
+[![](art/youtube.jpg)](https://www.youtube.com/) <br>
+https://www.youtube.com/watch?v=OMaOBdMiC70
 
-### Published in Circuit Cellar, July 2017
+### As Seen In Circuit Cellar Magazine
+[![](art/circuitcellar.jpg)](https://circuitcellar.com/)<br>
+https://cc-webshop.com/collections/circuit-cellar-2017/products/circuit-cellar-324-july-2017-pdf
 
 # Links
 8x8 LED Display:<br>
